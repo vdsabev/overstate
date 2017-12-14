@@ -8,7 +8,6 @@ export interface Store<T extends {}> {
 }
 
 /** A lower-level function to create a store with your own merge function, e.g. from lodash */
-// TODO: Possibly mutate the source itself, if we think that might be useful
 // TODO: Explore using `Object.defineProperty` instead of proxy actions
 export const createStore = <T extends {}>(source: T, merge: Merge<T>): Store<T> => {
   const model: T = {} as any;
@@ -36,26 +35,34 @@ export const createStore = <T extends {}>(source: T, merge: Merge<T>): Store<T> 
     listeners.forEach((subscription) => subscription(model));
   };
 
-  // TODO: Implement slices
   // TODO: For class instances, perhaps proxy methods from `model.constructor.prototype`
-  Object.keys(source).forEach((key) => {
-    const value = (source as any)[key];
-    if (typeof value === 'function') {
-      (model as any)[key] = (...args: any[]) => {
-        const changes: RecursivePartial<T> = value.apply(model, args);
-        set(changes);
-        return changes;
-      };
-    }
-    // We need to go deeper.jpg
-    else if (typeof value === 'object' && value !== null) {
-      // TODO: Deep create actions
-    }
-    // Initialize values
-    else {
-      (model as any)[key] = value;
-    }
-  });
+  const mergeSourceIntoModel = <U extends {}>(sourceSlice: U, modelSlice: U) => {
+    if (sourceSlice == null) return;
+
+    Object.keys(sourceSlice).forEach((key) => {
+      const sourceValue = (sourceSlice as any)[key];
+      if (isFunction(sourceValue)) {
+        (modelSlice as any)[key] = (...args: any[]) => {
+          const changes: RecursivePartial<T> = sourceValue.apply(modelSlice, args);
+          set(changes);
+          return changes;
+        };
+      }
+      // We need to go deeper.jpg
+      else if (isObject(sourceValue)) {
+        if (!(modelSlice as any)[key]) {
+          (modelSlice as any)[key] = {};
+        }
+        mergeSourceIntoModel((sourceSlice as any)[key], (modelSlice as any)[key]);
+      }
+      // Initialize values
+      else {
+        (modelSlice as any)[key] = sourceValue;
+      }
+    });
+  };
+
+  mergeSourceIntoModel(source, model);
 
   return {
     model,
@@ -64,3 +71,7 @@ export const createStore = <T extends {}>(source: T, merge: Merge<T>): Store<T> 
     update
   };
 };
+
+const isFunction = (value: any): boolean => typeof value === 'function';
+
+const isObject = (value: any): boolean => value !== null && typeof value === 'object' && !Array.isArray(value);

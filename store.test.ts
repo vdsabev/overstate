@@ -78,7 +78,7 @@ describe(`createStore`, () => {
       expect(store.model.count).toBe(3);
     });
 
-    it(`should support imperative programming`, () => {
+    it(`should support imperative programming (without calling listeners)`, () => {
       const model = {
         count: 0,
         add(count: number) {
@@ -88,6 +88,34 @@ describe(`createStore`, () => {
       const store = createStore(model, merge);
       store.model.add(10);
       expect(store.model.count).toBe(10);
+    });
+
+    describe(`deep models`, () => {
+      const model = {
+        greeter: {
+          name: 'a',
+          rename(name: string) {
+            return { name };
+          }
+        },
+        counter: {
+          count: 0,
+          add(count: number) {
+            return { count: this.count + count };
+          }
+        }
+      };
+      const store = createStore(model, merge);
+
+      it(`should support deep values`, () => {
+        expect(store.model.greeter.name).toBe('a');
+        expect(store.model.counter.count).toBe(0);
+      });
+
+      it(`should support deep functions`, () => {
+        expect(store.model.greeter.rename('b')).toEqual({ name: 'b' });
+        expect(store.model.counter.add(1)).toEqual({ count: 1 });
+      });
     });
   });
 });
