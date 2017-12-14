@@ -78,6 +78,19 @@ describe(`createStore`, () => {
       expect(store.model.count).toBe(3);
     });
 
+    it(`should not mutate source model`, () => {
+      const model = {
+        count: 0,
+        up() {
+          return { count: this.count + 1 };
+        }
+      };
+      const store = createStore(model, merge);
+      store.model.up();
+      expect(model.count).toBe(0);
+      expect(store.model.count).toBe(1);
+    });
+
     it(`should support imperative programming (without calling listeners)`, () => {
       const model = {
         count: 0,
@@ -105,16 +118,37 @@ describe(`createStore`, () => {
           }
         }
       };
-      const store = createStore(model, merge);
 
-      it(`should support deep values`, () => {
+      it(`should initialize deep values`, () => {
+        const store = createStore(model, merge);
         expect(store.model.greeter.name).toBe('a');
         expect(store.model.counter.count).toBe(0);
       });
 
-      it(`should support deep functions`, () => {
+      it(`should return correct value from deep functions`, () => {
+        const store = createStore(model, merge);
         expect(store.model.greeter.rename('b')).toEqual({ name: 'b' });
         expect(store.model.counter.add(1)).toEqual({ count: 1 });
+      });
+
+      it(`should set deep values from deep functions`, () => {
+        const store = createStore(model, merge);
+        store.model.greeter.rename('c');
+        expect(store.model.greeter.name).toBe('c');
+        store.model.counter.add(1);
+        expect(store.model.counter.count).toBe(1);
+      });
+
+      it(`should not mutate source model`, () => {
+        const store = createStore(model, merge);
+        store.model.counter.add(1);
+        expect(model.counter.count).toBe(0);
+        expect(store.model.counter.count).toBe(1);
+      });
+
+      it(`should have easily testable source model without going through store`, () => {
+        expect(model.greeter.rename('b')).toEqual({ name: 'b' });
+        expect(model.counter.add(1)).toEqual({ count: 1 });
       });
     });
   });

@@ -16,7 +16,7 @@ export const merge = <T extends {}>(x: RecursivePartial<T>, ...args: RecursivePa
   return x;
 };
 
-export interface Merge<T extends {}> {
+export interface Merge<T extends {} = any> {
   (x: RecursivePartial<T>, ...args: RecursivePartial<T>[]): RecursivePartial<T>;
 }
 

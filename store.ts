@@ -2,24 +2,15 @@ import { Merge, RecursivePartial } from './merge';
 
 export interface Store<T extends {}> {
   model: T;
-  set(changes: RecursivePartial<T>): void;
   subscribe(listener: Function): () => void;
   update(): void;
 }
 
 /** A lower-level function to create a store with your own merge function, e.g. from lodash */
 // TODO: Explore using `Object.defineProperty` instead of proxy actions
-export const createStore = <T extends {}>(source: T, merge: Merge<T>): Store<T> => {
+export const createStore = <T extends {}>(source: T, merge: Merge): Store<T> => {
   const model: T = {} as any;
   const listeners: Function[] = [];
-
-  const set = (changes: RecursivePartial<T>) => {
-    // TODO: Proxy newly added actions to support dynamically changing actions
-    if (changes != null) {
-      merge(model, changes);
-    }
-    update();
-  };
 
   const subscribe = (listener: Function) => {
     listeners.push(listener);
@@ -35,16 +26,24 @@ export const createStore = <T extends {}>(source: T, merge: Merge<T>): Store<T> 
     listeners.forEach((subscription) => subscription(model));
   };
 
+  const set = <U extends {}>(modelSlice: U, changes: RecursivePartial<U>) => {
+    // TODO: Proxy newly added actions to support dynamically changing actions
+    if (changes != null) {
+      merge(modelSlice, changes);
+    }
+    update();
+  };
+
   // TODO: For class instances, perhaps proxy methods from `model.constructor.prototype`
-  const mergeSourceIntoModel = <U extends {}>(sourceSlice: U, modelSlice: U) => {
+  const mergeSourceIntoModel = <U extends {}>(modelSlice: RecursivePartial<U>, sourceSlice: U) => {
     if (sourceSlice == null) return;
 
     Object.keys(sourceSlice).forEach((key) => {
       const sourceValue = (sourceSlice as any)[key];
       if (isFunction(sourceValue)) {
         (modelSlice as any)[key] = (...args: any[]) => {
-          const changes: RecursivePartial<T> = sourceValue.apply(modelSlice, args);
-          set(changes);
+          const changes: RecursivePartial<U> = sourceValue.apply(modelSlice, args);
+          set(modelSlice, changes);
           return changes;
         };
       }
@@ -53,7 +52,7 @@ export const createStore = <T extends {}>(source: T, merge: Merge<T>): Store<T> 
         if (!(modelSlice as any)[key]) {
           (modelSlice as any)[key] = {};
         }
-        mergeSourceIntoModel((sourceSlice as any)[key], (modelSlice as any)[key]);
+        mergeSourceIntoModel((modelSlice as any)[key], (sourceSlice as any)[key]);
       }
       // Initialize values
       else {
@@ -62,11 +61,10 @@ export const createStore = <T extends {}>(source: T, merge: Merge<T>): Store<T> 
     });
   };
 
-  mergeSourceIntoModel(source, model);
+  mergeSourceIntoModel(model, source);
 
   return {
     model,
-    set,
     subscribe,
     update
   };
