@@ -12,9 +12,7 @@
     "declarationDir": "./",
     "lib": ["es6"],
     "module": "es6",
-    "removeComments": true,
-    "target": "esnext",
-    "jsx": "preserve"
+    "target": "es5"
   },
   "include": [
     "*.ts"

@@ -1,7 +1,7 @@
 /** A simple deep merge function that mutates the target object */
 export const merge = <T extends {}>(x: RecursivePartial<T>, ...args: RecursivePartial<T>[]): RecursivePartial<T> => {
   if (x == null || typeof x !== 'object' || Array.isArray(x)) {
-    throw new Error(`Invalid merge target, expected an object, but got ${JSON.stringify(x, null, 2)}`);
+    throw new Error(`Invalid merge target, expected an object, got ${JSON.stringify(x, null, 2)}`);
   }
 
   args.forEach((y) => {
