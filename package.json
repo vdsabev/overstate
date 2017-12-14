@@ -6,7 +6,7 @@
   "module": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm test && npm run build",
     "build": "tsc && rollup -c",
     "start": "jest --watchAll",
     "test": "jest"
