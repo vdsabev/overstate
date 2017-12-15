@@ -49,8 +49,13 @@ export const createStore = <T extends {}>(source: T, { merge, getDeepProps }: St
       const sourceValue = (sourceSlice as any)[key];
       if (isFunction(sourceValue)) {
         (modelSlice as any)[key] = (...args: any[]) => {
-          const changes: RecursivePartial<U> = sourceValue.apply(modelSlice, args);
-          set(modelSlice, changes);
+          const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = sourceValue.apply(modelSlice, args);
+          if (isPromise(changes)) {
+            changes.then((asyncChanges) => set(modelSlice, asyncChanges));
+          }
+          else {
+            set(modelSlice, changes);
+          }
           return changes;
         };
       }
@@ -76,3 +81,5 @@ export const createStore = <T extends {}>(source: T, { merge, getDeepProps }: St
     update
   };
 };
+
+const isPromise = <T>(promise: T | Promise<T>): promise is Promise<T> => promise != null && isFunction((promise as any).then);

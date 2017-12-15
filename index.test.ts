@@ -162,7 +162,7 @@ describe(`createStore`, () => {
     });
   });
 
-  describe('class model', () => {
+  describe(`class model`, () => {
     class BaseCounter {
       count = 0;
 
@@ -190,19 +190,43 @@ describe(`createStore`, () => {
       extendedCounter: new ExtendedCounter()
     };
 
-    it('should contain values', () => {
+    it(`should contain values`, () => {
       const store = createStore(model);
       expect(store.model.baseCounter.count).toBe(0);
       expect(store.model.extendedCounter.count).toBe(0);
       expect(store.model.extendedCounter.calls).toBe(0);
     });
 
-    it('should contain functions', () => {
+    it(`should contain functions`, () => {
       const store = createStore(model);
       expect(store.model.baseCounter.add).not.toBeUndefined();
       expect(store.model.extendedCounter.add).not.toBeUndefined();
       expect(store.model.extendedCounter.down).not.toBeUndefined();
       expect(store.model.extendedCounter.up).not.toBeUndefined();
+    });
+  });
+
+  describe(`async`, () => {
+    it(`should set state after promise resolves`, () => {
+      const model = {
+        count: 0,
+        add(count: number) {
+          return Promise.resolve({ count: this.count + count });
+        }
+      };
+      const store = createStore(model);
+      expect(store.model.add(10)).resolves.toEqual({ count: 10 });
+    });
+
+    it(`should not set state after promise throws error`, () => {
+      const model = {
+        count: 0,
+        add(count: number) {
+          return Promise.reject(`Error`);
+        }
+      };
+      const store = createStore(model);
+      expect(store.model.add(10)).rejects.toBe(`Error`);
     });
   });
 });
