@@ -1,4 +1,6 @@
 import { Merge, RecursivePartial } from './merge';
+import { DeepProps } from './props';
+import { isFunction, isObject } from './utils';
 
 export interface Store<T extends {}> {
   model: T;
@@ -6,9 +8,14 @@ export interface Store<T extends {}> {
   update(): void;
 }
 
-/** A lower-level function to create a store with your own merge function, e.g. from lodash */
+export interface StoreOptions {
+  merge: Merge;
+  getDeepProps: DeepProps;
+}
+
 // TODO: Explore using `Object.defineProperty` instead of proxy actions
-export const createStore = <T extends {}>(source: T, merge: Merge): Store<T> => {
+/** A lower-level function to create a store with your own options, e.g. merge from lodash */
+export const createStore = <T extends {}>(source: T, { merge, getDeepProps }: StoreOptions): Store<T> => {
   const model: T = {} as any;
   const listeners: Function[] = [];
 
@@ -38,7 +45,7 @@ export const createStore = <T extends {}>(source: T, merge: Merge): Store<T> => 
   const mergeSourceIntoModel = <U extends {}>(modelSlice: RecursivePartial<U>, sourceSlice: U) => {
     if (sourceSlice == null) return;
 
-    Object.keys(sourceSlice).forEach((key) => {
+    getDeepProps(sourceSlice).forEach((key) => {
       const sourceValue = (sourceSlice as any)[key];
       if (isFunction(sourceValue)) {
         (modelSlice as any)[key] = (...args: any[]) => {
@@ -69,7 +76,3 @@ export const createStore = <T extends {}>(source: T, merge: Merge): Store<T> => 
     update
   };
 };
-
-const isFunction = (value: any): boolean => typeof value === 'function';
-
-const isObject = (value: any): boolean => value !== null && typeof value === 'object' && !Array.isArray(value);
