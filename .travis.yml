@@ -1,0 +1,25 @@
+language: node_js
+
+node_js: 8
+
+branches:
+  only:
+    - master
+
+cache:
+  directories:
+    - node_modules
+
+script:
+  - npm test
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
+deploy:
+  provider: npm
+  email: vdsabev@gmail.com
+  api_key:
+    secure: AwIgWU3qIaCwRaCyeI7gqlHFbS6AZOK1bYNmWrAg+J28G6bqRdq65qSXNBx1VawZUal0Cb5HOEUmy+TTsZkdeKKyWcy1mhyah06d+ARP8gt23Eib4RhbdYSuMSgWZVwNhgnU1S/aGfWWchU1Bf8HSXXLAahOT1cEvDVQDLfNUW3HndMhaIoldLKqFCjXrpHfLDyT5MuRF6ASmDeT/Vr8myWm3BY8786rEJwbZqoZRp9fNrQjFs/HhDOsFbK+Dxlt67zarYRQpJ5vZvXF6Q+yT8/oK44ys9WFZXnQipFAmybXUp4J7+F10I+TCEnKGq+g8WB+vyytAf3hCuOkXYirujsc1DkPrlqIVZDAwGAMpx4CSpg+6UWVssJHCOInZkyZdRg8wTCJUlq4I++DRa5Kj3hylxhHqhkfZi8zoHYgk+95csA8VYVRdjyLB5+ZneJxxmY5ZuI4WVUIUqNxvsjizOeYC+v28IwyT/qZ7E5o57LZw07kSz/CKCSENvuMMsNNCB/ME+ivqXh6NcZrqUuaeqls0O1LRCFCWfoPcIrWVbWFJT6IBat2hyI6Htb9d+m2oXnB6dousrKTpkPF3GsceVGVZxLxgpgHnU2ZueDrJP+NOfv7xORpMPxm8vOBjdYt6KdYvCgMpu2WLOOjlivDLXTADbynWecDYX8JAD3Fcnc=
+  on:
+    repo: vdsabev/derpy
