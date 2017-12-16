@@ -207,7 +207,7 @@ describe(`createStore`, () => {
   });
 
   describe(`async`, () => {
-    it(`should set state after promise resolves`, () => {
+    it(`should set state after promise resolves`, async () => {
       const model = {
         count: 0,
         add(count: number) {
@@ -215,10 +215,10 @@ describe(`createStore`, () => {
         }
       };
       const store = createStore(model);
-      expect(store.model.add(10)).resolves.toEqual({ count: 10 });
+      expect(await store.model.add(10)).toEqual({ count: 10 });
     });
 
-    it(`should not set state after promise throws error`, () => {
+    it(`should not set state after promise throws error`, async () => {
       const model = {
         count: 0,
         add(count: number) {
@@ -226,7 +226,13 @@ describe(`createStore`, () => {
         }
       };
       const store = createStore(model);
-      expect(store.model.add(10)).rejects.toBe(`Error`);
+      try {
+        await store.model.add(10);
+        throw `Not an error`;
+      }
+      catch (error) {
+        expect(error).toBe(`Error`);
+      }
     });
   });
 });

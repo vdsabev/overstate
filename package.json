@@ -1,6 +1,6 @@
 {
   "name": "derpy",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "main": "index.min.js",
   "module": "index.js",
@@ -27,19 +27,18 @@
     "collectCoverage": true,
     "collectCoverageFrom": [
       "!node_modules/**",
-      "!**/*.d.ts",
-      "!**/*.test.{ts,tsx}",
-      "**/*.{ts,tsx}"
+      "!*.d.ts",
+      "!*.test.ts",
+      "!*.config.ts",
+      "*.ts"
     ],
     "moduleFileExtensions": [
       "ts",
-      "tsx",
-      "js",
-      "jsx"
+      "js"
     ],
-    "testRegex": "(/__tests__/.*|\\.test)\\.(ts|tsx|js|jsx)$",
+    "testRegex": "(/__tests__/.*|\\.test)\\.(ts|js)$",
     "transform": {
-      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      ".ts": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     }
   }
 }
