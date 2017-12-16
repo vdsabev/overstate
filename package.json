@@ -1,6 +1,6 @@
 {
   "name": "derpy",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "main": "index.min.js",
   "module": "index.js",
@@ -8,11 +8,15 @@
   "scripts": {
     "prepublishOnly": "npm test && npm run build",
     "build": "tsc && rollup -c",
+    "build:benchmarks": "tsc -p benchmarks",
     "start": "jest --watchAll",
     "test": "jest"
   },
   "devDependencies": {
+    "@types/benchmark": "1.0.31",
     "@types/jest": "21.1.8",
+    "@types/node": "8.5.1",
+    "benchmark": "2.1.4",
     "jest": "21.2.1",
     "rollup": "0.52.1",
     "rollup-plugin-uglify": "2.0.1",

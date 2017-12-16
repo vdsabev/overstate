@@ -4,4 +4,4 @@ node_modules
 *.log
 *.js
 *.d.ts
-!rollup.config.js
+!derpy.d.ts

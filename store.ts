@@ -4,7 +4,7 @@ import { isFunction, isObject } from './utils';
 
 export interface Store<T extends {}> {
   model: T;
-  subscribe(listener: Function): () => void;
+  subscribe(listener: Function): (model: T) => void;
   update(): void;
 }
 

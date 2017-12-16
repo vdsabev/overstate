@@ -1,24 +1,15 @@
 {
-  "compileOnSave": true,
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "alwaysStrict": true,
-    "experimentalDecorators": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "suppressImplicitAnyIndexErrors": false,
-
-    "baseUrl": "./",
     "declaration": true,
     "declarationDir": "./",
-    "lib": ["es6"],
-    "module": "es6",
-    "target": "es5"
+    "module": "es6"
   },
   "include": [
     "*.ts"
   ],
   "exclude": [
     "node_modules",
-    "**/*.test.ts"
+    "*.test.ts"
   ]
 }
