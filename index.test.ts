@@ -23,6 +23,12 @@ describe(`createStore`, () => {
       expect(typeof store.model.b).toBe('function');
     });
 
+    it(`should contain array`, () => {
+      const a = [1, 2, 3];
+      const store = createStore({ a });
+      expect(store.model.a).toBe(a);
+    });
+
     it(`should return proxied functions`, () => {
       const a = () => {};
       const store = createStore({ a });
