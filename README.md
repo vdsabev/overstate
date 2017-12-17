@@ -8,13 +8,7 @@
 A silly little state manager 😋
 
 # How do I use this thing?
-```sh
-npm install derpy
-```
-
-Or include https://unpkg.com/derpy in a script tag.
-
-Now, define the properties and functions of your app:
+First, define the properties and functions of your app:
 ```js
 export const CounterModel = {
   count: 0,
