@@ -3,7 +3,7 @@ import { DeepProps } from './props';
 import { isFunction, isObject } from './utils';
 
 export interface Store<T extends {}> {
-  model: T;
+  readonly model: Readonly<T>;
   subscribe(listener: Function): (model: T) => void;
   update(): void;
 }
