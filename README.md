@@ -8,7 +8,13 @@
 A silly little state manager 😋
 
 # How do I use this thing?
-First, define the properties and functions of your app:
+```sh
+npm install derpy
+```
+
+Or include https://unpkg.com/derpy in a script tag.
+
+Now, define the properties and functions of your app:
 ```js
 export const CounterModel = {
   count: 0,
@@ -36,7 +42,7 @@ const unsubscribe = store.subscribe((model) => {
 You can pass the model to your view and call `model.down()` or `model.up()` anywhere. The functions are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`. When called, these functions automatically invoke the listeners in `store.subscribe`.
 
 ## Rendering
-Be careful - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not currently throttle or rate limit that in any way! So use `requestAnimationFrame` when rendering, folks 🦉
+Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not currently throttle or rate limit that in any way! So use `requestAnimationFrame` when rendering, folks 🦉
 
 For more examples, complete with a view layer, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
@@ -63,7 +69,7 @@ export const ABCounterModel = {
 };
 ```
 
-In this case, the child counters A and B will keep the rest of their properties - whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean, or having to write this:
+In this case, the child counters A and B will keep the rest of their properties - whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
 ```js
 up() {
   return {
@@ -76,8 +82,8 @@ up() {
 
 If you need more control over how data gets merged, use your own merge function:
 ```js
-// You're never happy with what you get for free, are you? 😞
 const store = createStore(ABCounterModel, { merge: Object.assign });
+// You're never happy with what you get for free, are you? 😞
 ```
 
 ## Asynchronous Functions
@@ -98,7 +104,7 @@ export const CounterModel = {
 ## TypeScript
 Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
 ```ts
-model.up(5); // [ts] Expected 0 arguments, but got 1.
+store.model.up(5); // [ts] Expected 0 arguments, but got 1.
 ```
 
 However, `this` doesn't work as well inside objects:
@@ -113,8 +119,10 @@ export const CounterModel = {
 
 And we can't do `add(this: typeof CounterModel, value: number)` either, because we're referencing an object inside its own definition.
 
+So...read on.
+
 ## Classes
-To get type safety inside your models, or if you just prefer to, you can use classes instead:
+To get type safety inside your models, or if you just prefer to, you can use classes instead of objects:
 ```ts
 export class CounterModel {
   count = 0;
@@ -129,14 +137,19 @@ And then when creating your store:
 const store = createStore(new CounterModel());
 ```
 
+Behold:
+```ts
+store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parameter of type 'number'.
+// magic.gif
+```
+
 ## Arrow Functions
-Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Anonymous functions also might not work with classes very well.
+Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow Derpy might also not work very well with Derpy.
 
 # Other FAQs
 ## So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
-- Feel free to ask questions and file issues right here in GitHub
-- [Join the Slack channel](https://join.slack.com/t/derpyjs/shared_invite/enQtMjg3NzM0OTI3NDQzLTVkMGQ0YmQyNmEwZmFlYTJjYjUyNTgwNGM4NjhiYjg4YjNiYmNhNTY4ZWYxYjY2MzgzM2E3ZWQ4MzU5YjhhMzI)
+- Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/derpy/issues)
 - Browse the [CodePen collection](https://codepen.io/collection/DNdBBG)
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
