@@ -24,5 +24,5 @@ export const createStore: _store.CreateStore = <T extends {}>(source: T, options
  * 2. A `patch` function that updates a container's DOM using the rendered view
  */
 export const app: _app.App = <T extends {}>(options: _app.AppOptions<T>, container?: Element): _store.Store<T> => {
-  return _app.app({ createStore, ...options }, container);
+  return _app.app(Object.assign({ createStore }, options), container);
 };

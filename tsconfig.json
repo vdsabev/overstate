@@ -5,7 +5,7 @@
     "declarationDir": "./",
     "module": "es6",
     "lib": ["es6", "dom"]
-},
+  },
   "include": [
     "*.ts"
   ],
