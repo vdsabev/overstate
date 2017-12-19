@@ -1,17 +1,32 @@
-import { createStore, merge, getDeepProps } from './index';
-import * as store from './store';
+import { createStore, merge, getDeepProps, app } from './index';
+import * as _app from './app';
+import * as _store from './store';
 
 describe(`createStore`, () => {
-  it(`should provide merge function for 'store.createStore'`, () => {
+  it(`should provide 'merge' and 'getDeepProps' functions for 'store.createStore'`, () => {
     const model = { a: 1, b: 2, c: 3 };
     expect(
       createStore(model).model
     ).toEqual(
-      store.createStore(model, { merge, getDeepProps }).model
+      _store.createStore(model, { merge, getDeepProps }).model
+    );
+  });
+
+  it(`should allow overriding 'merge' and 'getDeepProps' functions`, () => {
+    const model = { a: 1, b: 2, c: 3 };
+    expect(
+      createStore(model, { merge, getDeepProps }).model
+    ).toEqual(
+      _store.createStore(model, { merge, getDeepProps }).model
     );
   });
 
   describe(`model`, () => {
+    it(`should be empty when created with null`, () => {
+      const store = createStore(null);
+      expect(store.model).toEqual({});
+    });
+
     it(`should be empty when created with an empty object`, () => {
       const store = createStore({});
       expect(store.model).toEqual({});
@@ -240,5 +255,54 @@ describe(`createStore`, () => {
         expect(error).toBe(`Error`);
       }
     });
+  });
+
+  describe(`subscribe`, () => {
+    it(`should call listener on update`, () => {
+      const store = createStore({});
+      const listener = jest.fn();
+      store.subscribe(listener);
+      store.update();
+      expect(listener).toHaveBeenCalledWith({});
+    });
+
+    it(`should unsubscribe`, () => {
+      const store = createStore({});
+      const listener = jest.fn();
+      const unsubscribe = store.subscribe(listener);
+      unsubscribe();
+      store.update();
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it(`should allow unsubscribe multiple times`, () => {
+      const store = createStore({});
+      const listener = jest.fn();
+      const unsubscribe = store.subscribe(listener);
+      unsubscribe();
+      unsubscribe();
+      store.update();
+      expect(listener).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe(`app`, () => {
+  const options: any = { model: { a: 1, b: 2, c: 3 }, view: () => {}, patch: () => {} };
+
+  it(`should provide 'createStore' function for 'app'`, () => {
+    expect(
+      app(options).model
+    ).toEqual(
+      _app.app({ ...options, createStore }).model
+    );
+  });
+
+  it(`should allow overriding 'createStore' function for 'app'`, () => {
+    expect(
+      app({ ...options, createStore }).model
+    ).toEqual(
+      _app.app({ ...options, createStore }).model
+    );
   });
 });
