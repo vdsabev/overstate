@@ -7,7 +7,7 @@
 # Derpy
 A silly little state manager 😋
 
-# How do I use this thing?
+## How do I use this thing?
 First, define the properties and functions of your app:
 ```js
 export const CounterModel = {
@@ -35,40 +35,64 @@ const unsubscribe = store.subscribe((model) => {
 
 You can pass the model to your view and call `model.down()` or `model.up()` anywhere. The functions are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`. When called, these functions automatically invoke the listeners in `store.subscribe`.
 
+Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not throttle or rate limit that in any way! So use `requestAnimationFrame` when rendering, folks 🦉
+
 ## Rendering
-Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not currently throttle or rate limit that in any way! So use `requestAnimationFrame` when rendering, folks 🦉
+Speaking of rendering, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right?
 
-For more examples, complete with a view layer, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
-
-## Deep Merge
-Let's upgrade to multiple counters:
 ```js
+/** @jsx h */
+import { app } from 'derpy';
+import { h, patch } from 'picodom'; // or whatever VDOM goddess you worship
 import { CounterModel } from './counter-model';
 
-export const ABCounterModel = {
-  a: CounterModel,
-  b: CounterModel,
-  down() {
+const store = app({
+  patch,
+  model: CounterModel,
+  view: ({ model }) =>
+    <div>
+      Your count is: {model.count}
+      <button onclick={model.down}>-</button>
+      <button onclick={model.up}>+</button>
+    </div>
+});
+// Or `app({...}, container);` - you can pass a custom DOM
+// element to render into, otherwise it's `document.body`.
+// ...
+// You're welcome. Remember I helped you get rich 💰
+```
+
+Basically, the `patch` function should update its container's content with the result of the `view` function. You can use whatever VDOM library you like, or write your own function to set the container's `innerHTML` for all I care.
+
+For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
+
+## Deep Merge
+Let's upgrade to multiple levels:
+```js
+export const WeatherModel = {
+  today: { low: -100, high: 0 }, // Arctic ocean ❄
+  tomorrow: { low: 1000, high: 2000 }, // Mordor 🔥
+  coolerLow() {
     return {
-      a: { count: this.a.count - 1 },
-      b: { count: this.b.count - 1 }
+      today: { low: this.today.low - 100 },
+      tomorrow: { low: this.low - 1000 }
     };
   },
-  up() {
+  hotterHigh() {
     return {
-      a: { count: this.a.count + 1 },
-      b: { count: this.b.count + 1 }
+      today: { high: this.today.high + 100 },
+      tomorrow: { high: this.high + 1000 }
     };
   }
 };
 ```
 
-In this case, the child counters A and B will keep the rest of their properties - whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
+In this case, the child objects `today` and `tomorrow` will keep the rest of their properties - whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
 ```js
-up() {
+hotterHigh() {
   return {
-    a: { ...this.a, count: this.a.count + 1 },
-    b: { ...this.b, count: this.b.count + 1 }
+    today: { ...this.today, high: this.today.high + 100 },
+    tomorrow: { ...this.tomorrow, high: this.high + 1000 }
     // we have to go deeper.jpg
   };
 }
@@ -140,15 +164,20 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 ## Arrow Functions
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow Derpy might also not work very well with Derpy.
 
-# Other FAQs
-## So this is cool, where can I find out more?
+## Other FAQs
+### Can I do funky stuff like return new actions dynamically, for code splitting and whatnot?
+It's on the roadmap, which means I thought about doing it once, but was too lazy to write it myself. Care to make a pull request?
+
+### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
 - Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/derpy/issues)
 - Browse the [CodePen collection](https://codepen.io/collection/DNdBBG)
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
-## Wait, how big is it?
-Always going on about size, are you? Okay, [the minified code](https://unpkg.com/derpy) is around 1.4KB, or 800 bytes gzipped. I hope you're happy now.
+### Wait, I want to run this library on a potato, how big is it?
+Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1.7KB, or 953 bytes gzipped. I hope you're happy.
 
-## This code offends me and my cat
+No? If you really want to go all the way down in size, you can import directly from individual files like `derpy/store` and see if that helps you reduce it even more. I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
+
+### This code offends me and my cat
 Hey, this isn't a question! Don't you have something better to be upset about, like global puberty or senseless acts of violins?

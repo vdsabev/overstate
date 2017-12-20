@@ -2,10 +2,18 @@ import { Merge, RecursivePartial } from './merge';
 import { DeepProps } from './props';
 import { isFunction, isObject } from './utils';
 
+export interface CreateStore {
+  <T extends {}>(source: T, options?: StoreOptions): Store<T>;
+}
+
 export interface Store<T extends {}> {
   readonly model: Readonly<T>;
-  subscribe(listener: Function): (model: T) => void;
+  subscribe(listener: StoreListener<T>): () => void;
   update(): void;
+}
+
+export interface StoreListener<T extends {}> {
+  (model: T): void;
 }
 
 export interface StoreOptions {
@@ -15,11 +23,11 @@ export interface StoreOptions {
 
 // TODO: Explore using `Object.defineProperty` instead of proxy actions
 /** A lower-level function to create a store with your own options, e.g. merge from lodash */
-export const createStore = <T extends {}>(source: T, { merge, getDeepProps }: StoreOptions): Store<T> => {
+export const createStore: CreateStore = <T extends {}>(source: T, { merge, getDeepProps }: StoreOptions): Store<T> => {
   const model: T = {} as any;
-  const listeners: Function[] = [];
+  const listeners: StoreListener<T>[] = [];
 
-  const subscribe = (listener: Function) => {
+  const subscribe = (listener: StoreListener<T>) => {
     listeners.push(listener);
     return () => {
       const indexOfListener = listeners.indexOf(listener);
