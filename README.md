@@ -35,7 +35,7 @@ const unsubscribe = store.subscribe((model) => {
 
 You can pass the model to your view and call `model.down()` or `model.up()` anywhere. The functions are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`. When called, these functions automatically invoke the listeners in `store.subscribe`.
 
-Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not throttle or rate limit that in any way! So use `requestAnimationFrame` when rendering, folks 🦉
+Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not throttle or rate limit that in any way!
 
 ## Rendering
 Speaking of rendering, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right?
@@ -64,6 +64,8 @@ const store = app({
 
 Basically, the `patch` function should update its container's content with the result of the `view` function. You can use whatever VDOM library you like, or write your own function to set the container's `innerHTML` for all I care.
 
+The `app` function uses `requestAnimationFrame` by default to throttle rendering. Alternatively, you can provide your own function to do that in `app({ throttle: ... })`. Look at you, smartypants! 🦉
+
 For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
 ## Deep Merge
@@ -72,13 +74,13 @@ Let's upgrade to multiple levels:
 export const WeatherModel = {
   today: { low: -100, high: 0 }, // Arctic ocean ❄
   tomorrow: { low: 1000, high: 2000 }, // Mordor 🔥
-  coolerLow() {
+  coolerLows() {
     return {
       today: { low: this.today.low - 100 },
       tomorrow: { low: this.low - 1000 }
     };
   },
-  hotterHigh() {
+  hotterHighs() {
     return {
       today: { high: this.today.high + 100 },
       tomorrow: { high: this.high + 1000 }
@@ -87,9 +89,9 @@ export const WeatherModel = {
 };
 ```
 
-In this case, the child objects `today` and `tomorrow` will keep the rest of their properties - whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
+In this case, after calling `coolerLows` or `hotterHighs` the child objects `today` and `tomorrow` will keep the rest of their properties. Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
 ```js
-hotterHigh() {
+hotterHighs() {
   return {
     today: { ...this.today, high: this.today.high + 100 },
     tomorrow: { ...this.tomorrow, high: this.high + 1000 }
