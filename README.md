@@ -38,7 +38,7 @@ You can pass the model to your view and call `model.down()` or `model.up()` anyw
 Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not throttle or rate limit that in any way!
 
 ## Rendering
-Speaking of rendering, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right?
+Speaking of which, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right?
 
 ```js
 /** @jsx h */
@@ -72,30 +72,31 @@ For more examples with different view layers, see [the CodePen collection](https
 Let's upgrade to multiple levels:
 ```js
 export const WeatherModel = {
-  today: { low: -100, high: 0 }, // Arctic ocean ❄
-  tomorrow: { low: 1000, high: 2000 }, // Mordor 🔥
+  arctic: { low: 0, high: 0 }, // ❄
+  mordor: { low: 1000, high: 1000 }, // 🔥
   coolerLows() {
     return {
-      today: { low: this.today.low - 100 },
-      tomorrow: { low: this.low - 1000 }
+      arctic: { low: this.arctic.low - 100 },
+      mordor: { low: this.mordor.low - 1000 }
     };
   },
   hotterHighs() {
     return {
-      today: { high: this.today.high + 100 },
-      tomorrow: { high: this.high + 1000 }
+      arctic: { high: this.arctic.high + 100 },
+      mordor: { high: this.mordor.high + 1000 }
     };
   }
 };
 ```
 
-In this case, after calling `coolerLows` or `hotterHighs` the child objects `today` and `tomorrow` will keep the rest of their properties. Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
+In this case, after calling `coolerLows` or `hotterHighs` the child objects `arctic` and `mordor` will keep the rest of their properties. Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
 ```js
 hotterHighs() {
   return {
-    today: { ...this.today, high: this.today.high + 100 },
-    tomorrow: { ...this.tomorrow, high: this.high + 1000 }
-    // we have to go deeper.jpg
+    arctic: { ...this.arctic, high: this.arctic.high + 100 },
+    mordor: { ...this.mordor, high: this.mordor.high + 1000 }
+    // we don't have to go deeper.jpg
+    // so don't spead your objects
   };
 }
 ```
