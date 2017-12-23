@@ -38,8 +38,7 @@ You can pass the model to your view and call `model.down()` or `model.up()` anyw
 Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not throttle or rate limit that in any way!
 
 ## Rendering
-Speaking of which, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right?
-
+Okay, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right? And we all know the best way to do that is to write a counter app:
 ```js
 /** @jsx h */
 import { app } from 'derpy';
@@ -67,6 +66,21 @@ Basically, the `patch` function should update its container's content with the r
 The `app` function uses `requestAnimationFrame` by default to throttle rendering. Alternatively, you can provide your own function to do that in `app({ throttle: ... })`. Look at you, smartypants! 🦉
 
 For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
+
+## Asynchronous Functions
+Promises are supported out of the box - changes in state will be reflected after the promise resolves, so async programming is as simple as it can be:
+```js
+export const CounterModel = {
+  count: 0,
+  async down() { // sweet async/await goodness 🍰
+    const value = await Promise.resolve(-1); // Get the value from some remote server
+    return { count: this.count + value });
+  },
+  up() { // ye olde promises 🧓
+    return Promise.resolve(1).then((value) => ({ count: this.count + value });
+  }
+};
+```
 
 ## Deep Merge
 Let's upgrade to multiple levels:
@@ -105,21 +119,6 @@ If you need more control over how data gets merged, use your own merge function:
 ```js
 const store = createStore(ABCounterModel, { merge: Object.assign });
 // You're never happy with what you get for free, are you? 😞
-```
-
-## Asynchronous Functions
-Promises are supported out of the box - changes in state will be reflected after the promise resolves, so async programming is as simple as it can be:
-```js
-export const CounterModel = {
-  count: 0,
-  async down() { // sweet async/await goodness 🍰
-    const value = await Promise.resolve(-1); // Get the value from some remote server
-    return { count: this.count + value });
-  },
-  up() { // ye olde promises 🧓
-    return Promise.resolve(1).then((value) => ({ count: this.count + value });
-  }
-};
 ```
 
 ## TypeScript
@@ -165,7 +164,7 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 ```
 
 ## Arrow Functions
-Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow Derpy might also not work very well with Derpy.
+Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow might also not work very well with Derpy.
 
 ## Other FAQs
 ### Can I do funky stuff like return new actions dynamically, for code splitting and whatnot?
