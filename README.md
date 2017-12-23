@@ -8,7 +8,7 @@
 A silly little state manager 😋
 
 ## How do I use this thing?
-### Store
+### Model
 First, define the properties and functions of your app:
 ```js
 export const CounterModel = {
@@ -22,6 +22,7 @@ export const CounterModel = {
 };
 ```
 
+### Store
 Then create a store:
 ```js
 import { createStore } from 'derpy';
