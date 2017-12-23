@@ -8,6 +8,7 @@
 A silly little state manager 😋
 
 ## How do I use this thing?
+### Store
 First, define the properties and functions of your app:
 ```js
 export const CounterModel = {
@@ -37,7 +38,7 @@ You can pass the model to your view and call `model.down()` or `model.up()` anyw
 
 Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not throttle or rate limit that in any way!
 
-## Rendering
+### Rendering
 Okay, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right? And we all know the best way to do that is to write a counter app:
 ```js
 /** @jsx h */
@@ -67,7 +68,7 @@ The `app` function uses `requestAnimationFrame` by default to throttle rendering
 
 For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
-## Asynchronous Functions
+### Asynchronous Functions
 Promises are supported out of the box - changes in state will be reflected after the promise resolves, so async programming is as simple as it can be:
 ```js
 export const CounterModel = {
@@ -82,8 +83,60 @@ export const CounterModel = {
 };
 ```
 
-## Deep Merge
-Let's upgrade to multiple levels:
+### TypeScript
+Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
+```ts
+store.model.up(5); // [ts] Expected 0 arguments, but got 1.
+```
+
+However, `this` doesn't work as well inside objects:
+```ts
+export const CounterModel = {
+  count: 0,
+  add(value: number) {
+    return { count: this.count + value }; // Hmm, `this` is of type `any` here 😕
+  }
+};
+```
+
+And we can't do `add(this: typeof CounterModel, value: number)` either, because we're referencing an object inside its own definition.
+
+So...read on.
+
+### Classes
+To get type safety inside your models, or if you just prefer to, you can use classes instead of objects:
+```ts
+export class CounterModel {
+  count = 0;
+  add(value: number) { // or `add(value) {` if you don't use TypeScript
+    return { count: this.count + value }; // Yay, `this` is of type `CounterModel` 😄
+  }
+};
+```
+
+And then when creating your store:
+```ts
+const store = createStore(new CounterModel());
+```
+
+Behold:
+```ts
+store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parameter of type 'number'.
+// magic.gif
+```
+
+### Composition
+You can put models inside models, y'all:
+```js
+// we have to go deeper.jpg
+export const ABCounterModel = {
+  a: CounterModel,
+  b: CounterModel
+};
+```
+
+### Deep Merge
+Let's upgrade to multi-level actions:
 ```js
 export const WeatherModel = {
   arctic: { low: 0, high: 0 }, // ❄
@@ -109,61 +162,20 @@ hotterHighs() {
   return {
     arctic: { ...this.arctic, high: this.arctic.high + 100 },
     mordor: { ...this.mordor, high: this.mordor.high + 1000 }
-    // we don't have to go deeper.jpg
-    // so don't spead your objects
+    //        ^^^ nope, don't spread your objects
+    //            we don't have to go deeper.jpg
   };
 }
 ```
 
+### Shallow Merge
 If you need more control over how data gets merged, use your own merge function:
 ```js
 const store = createStore(ABCounterModel, { merge: Object.assign });
 // You're never happy with what you get for free, are you? 😞
 ```
 
-## TypeScript
-Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
-```ts
-store.model.up(5); // [ts] Expected 0 arguments, but got 1.
-```
-
-However, `this` doesn't work as well inside objects:
-```ts
-export const CounterModel = {
-  count: 0,
-  add(value: number) {
-    return { count: this.count + value }; // Hmm, `this` is of type `any` here 😕
-  }
-};
-```
-
-And we can't do `add(this: typeof CounterModel, value: number)` either, because we're referencing an object inside its own definition.
-
-So...read on.
-
-## Classes
-To get type safety inside your models, or if you just prefer to, you can use classes instead of objects:
-```ts
-export class CounterModel {
-  count = 0;
-  add(value: number) { // or `add(value) {` if you don't use TypeScript
-    return { count: this.count + value }; // Yay, `this` is of type `CounterModel` 😄
-  }
-};
-```
-
-And then when creating your store:
-```ts
-const store = createStore(new CounterModel());
-```
-
-Behold:
-```ts
-store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parameter of type 'number'.
-// magic.gif
-```
-
-## Arrow Functions
+### Arrow Functions
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow might also not work very well with Derpy.
 
 ## Other FAQs
