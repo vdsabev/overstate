@@ -177,7 +177,7 @@ const store = createStore(ABCounterModel, { merge: Object.assign });
 ```
 
 ### Arrow Functions
-Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow might also not work very well with Derpy.
+Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow functions might not work very well with Derpy either.
 
 ## Other FAQs
 ### Can I do funky stuff like return new actions dynamically, for code splitting and whatnot?
@@ -192,7 +192,7 @@ I'm glad you asked! Here are some useful resources:
 ### Wait, I want to run this library on a potato, how big is it?
 Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1.7KB, or 953 bytes gzipped. I hope you're happy.
 
-No? If you really want to go all the way down in size, you can import directly from individual files like `derpy/store` and see if that helps you reduce it even more. I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
+No? If you really want to go all the way down in size, you can import individual files like `derpy/store` directly and see if that helps you. I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
 
 ### This code offends me and my cat
 Hey, this isn't a question! Don't you have something better to be upset about, like global puberty or senseless acts of violins?
