@@ -1,9 +1,7 @@
-import { Merge, RecursivePartial } from './merge';
-import { DeepProps } from './props';
-import { isFunction, isObject, isPromise } from './utils';
+import { RecursivePartial, isFunction, isObject, isPromise, merge, getDeepProps } from './utils';
 
 export interface CreateStore {
-  <T extends {}>(source: T, options?: StoreOptions): Store<T>;
+  <T extends {}>(source: T): Store<T>;
 }
 
 export interface Store<T extends {}> {
@@ -16,14 +14,12 @@ export interface StoreListener<T extends {}> {
   (model: T): void;
 }
 
-export interface StoreOptions {
-  merge: Merge;
-  getDeepProps: DeepProps;
-}
-
 // TODO: Explore using `Object.defineProperty` instead of proxy functions
-/** A lower-level function to create a store with your own options, e.g. merge from lodash */
-export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
+/**
+ * Create a store from a source object, deep copying all values
+ * and proxying all functions to call subscriptions when executed.
+ */
+export const createStore: CreateStore = (source) => {
   const model: typeof source = {} as any;
   const listeners: StoreListener<typeof source>[] = [];
 
@@ -55,9 +51,9 @@ export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
   const set = <U extends {}>(modelSlice: U, changes: RecursivePartial<U>) => {
     if (changes != null) {
       getDeepProps(changes).forEach((key) => {
-        const changeValue = (changes as any)[key];
-        if (isFunction(changeValue)) {
-          (changes as any)[key] = createProxyFunction(changeValue, modelSlice);
+        const sourceValue = (changes as any)[key];
+        if (isFunction(sourceValue)) {
+          (changes as any)[key] = createProxyFunction(sourceValue, modelSlice);
         }
       });
       merge(modelSlice, changes);
@@ -81,7 +77,7 @@ export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
         }
         mergeSourceIntoModel((modelSlice as any)[key], (sourceSlice as any)[key]);
       }
-      // Initialize values
+      // Set value
       else {
         (modelSlice as any)[key] = sourceValue;
       }
