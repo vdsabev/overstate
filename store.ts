@@ -43,6 +43,21 @@ export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
 
   const set = <U extends {}>(modelSlice: U, changes: RecursivePartial<U>) => {
     if (changes != null) {
+      getDeepProps(changes).forEach((key) => {
+        const changeValue = (changes as any)[key];
+        if (isFunction(changeValue)) {
+          (changes as any)[key] = (...args: any[]) => {
+            const changes2: RecursivePartial<U> | Promise<RecursivePartial<U>> = changeValue.apply(modelSlice, args);
+            if (isPromise(changes2)) {
+              changes2.then((asyncChanges) => set(modelSlice, asyncChanges));
+            }
+            else {
+              set(modelSlice, changes2);
+            }
+            return changes;
+          };
+        }
+      });
       merge(modelSlice, changes);
     }
     update();
