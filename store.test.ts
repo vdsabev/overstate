@@ -1,6 +1,21 @@
 import { createStore } from './index';
 
 describe(`createStore`, () => {
+  describe(`options`, () => {
+    const model = {};
+
+    it(`should allow passing empty object as options`, () => {
+      const store = createStore(model, {});
+      expect(store.model).toEqual(model);
+    });
+
+    it(`should allow passing a custom merge function, which will be called`, () => {
+      const merge = jest.fn();
+      const store = createStore(model, { merge });
+      expect(merge).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe(`model`, () => {
     it(`should be empty when created with null`, () => {
       const store = createStore(null);

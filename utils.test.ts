@@ -1,4 +1,4 @@
-import { merge, getDeepProps } from './utils';
+import { merge, getAllProps } from './utils';
 
 describe('merge', () => {
   it('should throw an error if X is null', () => {
@@ -70,7 +70,7 @@ describe('merge', () => {
   });
 });
 
-describe('getDeepProps', () => {
+describe('getAllProps', () => {
   class BaseCounter {
     count = 0;
 
@@ -94,20 +94,20 @@ describe('getDeepProps', () => {
   }
 
   it('should return empty array when called with null', () => {
-    expect(getDeepProps(null)).toEqual([]);
+    expect(getAllProps(null)).toEqual([]);
   });
 
   it('should return empty array when called with an empty object', () => {
-    expect(getDeepProps({})).toEqual([]);
+    expect(getAllProps({})).toEqual([]);
   });
 
   it('should get properties and methods of class (without constructor)', () => {
     const counter = new BaseCounter();
-    expect(getDeepProps(counter)).toEqual(['count', 'add']);
+    expect(getAllProps(counter)).toEqual(['count', 'add']);
   });
 
   it('should get properties and methods of extended class', () => {
     const counter = new ExtendedCounter();
-    expect(getDeepProps(counter)).toEqual(['count', 'calls', 'down', 'up', 'add']);
+    expect(getAllProps(counter)).toEqual(['count', 'calls', 'down', 'up', 'add']);
   });
 });

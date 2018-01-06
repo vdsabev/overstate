@@ -1,7 +1,11 @@
-import { RecursivePartial, isPromise, merge } from './utils';
+import { RecursivePartial, isPromise, merge, Merge } from './utils';
 
 export interface CreateStore {
-  <T extends {}>(source: T): Store<T>;
+  <T extends {}>(source: T, options?: Partial<StoreOptions>): Store<T>;
+}
+
+export interface StoreOptions {
+  merge: Merge;
 }
 
 export interface Store<T extends {}> {
@@ -19,9 +23,17 @@ export interface StoreListener<T extends {}> {
  * Create a store from a source object, deep copying all values
  * and proxying all functions to call subscriptions when executed.
  */
-export const createStore: CreateStore = (source) => {
+export const createStore: CreateStore = (source, options) => {
   const model: typeof source = {} as any;
   const listeners: StoreListener<typeof source>[] = [];
+
+  if (!options) {
+    options = {};
+  }
+
+  if (!options.merge) {
+    options.merge = merge;
+  }
 
   const subscribe = (listener: StoreListener<typeof source>) => {
     listeners.push(listener);
@@ -42,18 +54,18 @@ export const createStore: CreateStore = (source) => {
 
     if (isPromise(changes)) {
       return changes.then((asyncChanges) => {
-        merge(slice, asyncChanges, createProxyFunction);
+        options.merge(slice, asyncChanges, createProxyFunction);
         update();
         return asyncChanges;
       });
     }
 
-    merge(slice, changes, createProxyFunction);
+    options.merge(slice, changes, createProxyFunction);
     update();
     return changes;
   };
 
-  merge(model, source, createProxyFunction);
+  options.merge(model, source, createProxyFunction);
 
   return {
     model,
