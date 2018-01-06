@@ -13,11 +13,11 @@ A silly little state manager 😋
 3. [Features](#features)
     1. [Composition](#composition)
     2. [Asynchronous Functions](#asynchronous-functions)
-    3. [Deep Merge](#deep-merge)
-    4. [Shallow Merge](#shallow-merge)
-    5. [TypeScript](#typescript)
-    6. [Classes](#classes)
-    7. [Arrow Functions](#arrow-functions)
+    3. [TypeScript](#typescript)
+    4. [Classes](#classes)
+    5. [Arrow Functions](#arrow-functions)
+    6. [Deep Merge](#deep-merge)
+    7. [Custom Merge](#custom-merge)
     8. [Rendering](#rendering)
 4. [FAQs](#faqs)
 
@@ -110,46 +110,6 @@ export const CounterModel = {
 };
 ```
 
-### Deep Merge
-Let's upgrade to multi-level objects:
-```js
-export const WeatherModel = {
-  arctic: { low: 0, high: 0 }, // ❄
-  mordor: { low: 1000, high: 1000 }, // 🔥
-  coolerLows() {
-    return {
-      arctic: { low: this.arctic.low - 100 },
-      mordor: { low: this.mordor.low - 1000 }
-    };
-  },
-  hotterHighs() {
-    return {
-      arctic: { high: this.arctic.high + 100 },
-      mordor: { high: this.mordor.high + 1000 }
-    };
-  }
-};
-```
-
-In this case, after calling `coolerLows` or `hotterHighs` the child objects `arctic` and `mordor` will keep the rest of their properties. Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
-```js
-hotterHighs() {
-  return {
-    arctic: { ...this.arctic, high: this.arctic.high + 100 },
-    mordor: { ...this.mordor, high: this.mordor.high + 1000 }
-    //        ^^^ nope, don't spread your objects
-    //            we don't have to go deeper.jpg
-  };
-}
-```
-
-### Shallow Merge
-If you need more control over how data gets merged, use your own merge function:
-```js
-const store = createStore(ABCounterModel, { merge: Object.assign });
-// You're never happy with what you get for free, are you? 😞
-```
-
 ### TypeScript
 Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
 ```ts
@@ -195,6 +155,61 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 ### Arrow Functions
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow functions might not work very well with Derpy either.
 
+### Deep Merge
+Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to. For example:
+```js
+export const WeatherModel = {
+  arctic: { low: 0, high: 0 }, // ❄
+  mordor: { low: 1000, high: 1000 }, // 🔥
+  coolerLows() {
+    return {
+      arctic: { low: this.arctic.low - 100 },
+      mordor: { low: this.mordor.low - 1000 }
+    };
+  },
+  hotterHighs() {
+    return {
+      arctic: { high: this.arctic.high + 100 },
+      mordor: { high: this.mordor.high + 1000 }
+    };
+  }
+};
+```
+
+In this case, the child objects `arctic` and `mordor` will keep their `high` property after calling `coolerLows` and their `high` properties after calling `hotterHighs`.
+
+Basically, deep merging saves you from having to write this:
+```js
+hotterHighs() {
+  return {
+    arctic: { ...this.arctic, high: this.arctic.high + 100 },
+    mordor: { ...this.mordor, high: this.mordor.high + 1000 }
+    //        ^^^ nope, don't spread your objects
+    //            we don't have to go deeper.jpg
+  };
+}
+```
+
+### Custom Merge
+If you need more control over how data gets merged, use your own merge function:
+```js
+const store = createStore(model, {
+  merge(target, source, createProxyFunction) {
+    for (let key in source) {
+      if (typeof source[key] === 'function') {
+        // Proxy functions so they automatically resolve promises and update state
+        target[key] = createProxyFunction(source[key], target);
+      }
+      else {
+        target[key] = source[key]; // Yay, shallow merge! 🎉
+      }
+    }
+    return target;
+  }
+});
+// You're never happy with what you get for free, are you? 😞
+```
+
 ### Rendering
 You can render the model in endless shapes most beautiful 💅
 For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
@@ -234,9 +249,9 @@ I'm glad you asked! Here are some useful resources:
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
 ### Wait, I want to run this library on a potato, how big is it?
-Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1.4KB, or 836 bytes gzipped. I hope you're happy.
+Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1162 bytes, or 747 bytes gzipped. I hope you're happy.
 
-No? If you really want to go all the way down in size, you can import individual files like `derpy/store` directly and see if that helps you. I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
+I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
 
 ### This code offends me and my cat
 Hey, this isn't a question! Don't you have something better to be upset about, like global puberty or senseless acts of violins?

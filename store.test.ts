@@ -2,17 +2,51 @@ import { createStore } from './index';
 
 describe(`createStore`, () => {
   describe(`options`, () => {
-    const model = {};
-
     it(`should allow passing empty object as options`, () => {
+      const model = {};
       const store = createStore(model, {});
       expect(store.model).toEqual(model);
     });
 
     it(`should allow passing a custom merge function, which will be called`, () => {
       const merge = jest.fn();
+      const model = {};
       const store = createStore(model, { merge });
       expect(merge).toHaveBeenCalledTimes(1);
+    });
+
+    it(`should update state with custom merge`, () => {
+      interface Model {
+        state: any;
+        setState(state: any): any;
+      }
+
+      const model: Model = {
+        state: {},
+        setState(state) {
+          return { state };
+        }
+      };
+
+      const store = createStore(model, {
+        merge(target: any, source: any, createProxyFunction: Function) {
+          for (let key in source) {
+            if (typeof source[key] === 'function') {
+              target[key] = createProxyFunction(source[key], target);
+            }
+            else {
+              target[key] = source[key];
+            }
+          }
+          return target;
+        }
+      });
+
+      store.model.setState({ a: 1 });
+      expect(store.model.state).toEqual({ a: 1 });
+
+      store.model.setState({ b: 2 });
+      expect(store.model.state).toEqual({ b: 2 });
     });
   });
 
@@ -259,30 +293,30 @@ describe(`createStore`, () => {
     }
 
     interface CounterModelSync extends CounterModel {
-      setState(state:Partial<CounterModel>): Partial<CounterModel>;
+      set(state:Partial<CounterModel>): Partial<CounterModel>;
     }
 
     const counterModelSync: CounterModelSync = {
       count: 0,
-      setState(state) {
+      set(state) {
         return state;
       }
     };
 
     interface CounterModelAsync extends CounterModel {
-      setState(state:Partial<CounterModel>): Promise<Partial<CounterModel>>;
+      set(state:Partial<CounterModel>): Promise<Partial<CounterModel>>;
     }
 
     const counterModelAsync: CounterModelAsync = {
       count: 0,
-      async setState(state) {
+      async set(state) {
         return state;
       }
     };
 
     it(`should add function from object`, () => {
       const store = createStore(counterModelSync);
-      store.model.setState({
+      store.model.set({
         add(count: number) {
           return { count: this.count + count };
         }
@@ -300,14 +334,14 @@ describe(`createStore`, () => {
       }
 
       const store = createStore(counterModelSync);
-      store.model.setState(new Counter());
+      store.model.set(new Counter());
       store.model.add(10);
       expect(store.model.count).toBe(10);
     });
 
     it(`should add function asynchronously`, async () => {
       const store = createStore(counterModelAsync);
-      await store.model.setState({
+      await store.model.set({
         add(count: number) {
           return { count: this.count + count };
         }
