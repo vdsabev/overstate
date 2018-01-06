@@ -1,4 +1,4 @@
-import { merge, Merge } from './merge';
+import { merge } from './merge';
 import { getDeepProps } from './props';
 import * as store from './store';
 
