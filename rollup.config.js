@@ -4,7 +4,7 @@ export default {
   input: 'index.js',
   output: {
     file: 'index.min.js',
-    sourcemap: false,
+    sourcemap: true,
     format: 'iife',
     name: 'Derpy'
   },

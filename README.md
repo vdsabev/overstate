@@ -8,7 +8,27 @@
 A silly little state manager 😋
 
 ## How do I use this thing?
-### Model
+```js
+import { createStore } from 'derpy';
+
+const store = createStore({
+  name: 'World',
+  setNameTo(aNewName) {
+    return { name: aNewName };
+  }
+});
+
+store.subscribe((model) => document.body.innerHTML = `Hello ${model.name}`);
+store.update();
+```
+
+Calling `store.update()` initially renders `"Hello World"`.
+
+Calling `store.model.setNameTo('😋')` anywhere in your application renders `"Hello 😋"`, and so on.
+
+## What's going on here?
+Let's go through another example.
+
 First, define the properties and functions of your app:
 ```js
 export const CounterModel = {
@@ -22,7 +42,6 @@ export const CounterModel = {
 };
 ```
 
-### Store
 Then create a store:
 ```js
 import { createStore } from 'derpy';
@@ -32,45 +51,38 @@ const store = createStore(CounterModel);
 const unsubscribe = store.subscribe((model) => {
   // Do whatever you want with your data
 });
-// Call `unsubscribe()` to get rid of the subscription
 ```
 
-You can pass the model to your view and call `model.down()` or `model.up()` anywhere. The functions are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`. When called, these functions automatically invoke the listeners in `store.subscribe`.
+### store.model
+The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically invoke all subscriptions created by `store.subscribe` calls.
 
-Tread lightly - `subscribe` is called every time you invoke a model function that returns a non-null value, and does not throttle or rate limit that in any way!
+All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
 
-### Rendering
-Okay, what you probably want is to put your data on a piece of glowing glass and become a gazillionaire overnight, right? And we all know the best way to do that is to write a counter app:
+### store.subscribe
+`subscribe` is called automatically every time you invoke a model function that returns a non-null value.
+
+The `store.subscribe` function returns an `unsubscribe` function which you can call at any time to remove the subscription.
+
+Tread lightly when rendering in subscriptions - they're not throttled or rate-limited in any way!
+
+### store.update
+Call `store.update()` to invoke all subscriptions manually. You usually only do this once after creating the store.
+
+## Features
+### Composition
+You can put models inside models, y'all:
 ```js
-/** @jsx h */
-import { app } from 'derpy';
-import { h, patch } from 'picodom'; // or whatever VDOM goddess you worship
-import { CounterModel } from './counter-model';
-
-const store = app({
-  patch,
-  model: CounterModel,
-  view: ({ model }) =>
-    <div>
-      Your count is: {model.count}
-      <button onclick={model.down}>-</button>
-      <button onclick={model.up}>+</button>
-    </div>
-});
-// Or `app({...}, container);` - you can pass a custom DOM
-// element to render into, otherwise it's `document.body`.
-// ...
-// You're welcome. Remember I helped you get rich 💰
+// we have to go deeper.jpg
+export const ABCounterModel = {
+  a: CounterModel,
+  b: CounterModel
+};
 ```
 
-Basically, the `patch` function should update its container's content with the result of the `view` function. You can use whatever VDOM library you like, or write your own function to set the container's `innerHTML` for all I care.
-
-The `app` function uses `requestAnimationFrame` by default to throttle rendering. Alternatively, you can provide your own function to do that in `app({ throttle: ... })`. Look at you, smartypants! 🦉
-
-For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
+This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Asynchronous Functions
-Promises are supported out of the box - changes in state will be reflected after the promise resolves, so async programming is as simple as it can be:
+Promises are supported out of the box - subscriptions will be called after the promise resolves, so async programming is as simple as it can be:
 ```js
 export const CounterModel = {
   count: 0,
@@ -82,6 +94,46 @@ export const CounterModel = {
     return Promise.resolve(1).then((value) => ({ count: this.count + value });
   }
 };
+```
+
+### Deep Merge
+Let's upgrade to multi-level actions:
+```js
+export const WeatherModel = {
+  arctic: { low: 0, high: 0 }, // ❄
+  mordor: { low: 1000, high: 1000 }, // 🔥
+  coolerLows() {
+    return {
+      arctic: { low: this.arctic.low - 100 },
+      mordor: { low: this.mordor.low - 1000 }
+    };
+  },
+  hotterHighs() {
+    return {
+      arctic: { high: this.arctic.high + 100 },
+      mordor: { high: this.mordor.high + 1000 }
+    };
+  }
+};
+```
+
+In this case, after calling `coolerLows` or `hotterHighs` the child objects `arctic` and `mordor` will keep the rest of their properties. Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
+```js
+hotterHighs() {
+  return {
+    arctic: { ...this.arctic, high: this.arctic.high + 100 },
+    mordor: { ...this.mordor, high: this.mordor.high + 1000 }
+    //        ^^^ nope, don't spread your objects
+    //            we don't have to go deeper.jpg
+  };
+}
+```
+
+### Shallow Merge
+If you need more control over how data gets merged, use your own merge function:
+```js
+const store = createStore(ABCounterModel, { merge: Object.assign });
+// You're never happy with what you get for free, are you? 😞
 ```
 
 ### TypeScript
@@ -126,58 +178,36 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 // magic.gif
 ```
 
-### Composition
-You can put models inside models, y'all:
-```js
-// we have to go deeper.jpg
-export const ABCounterModel = {
-  a: CounterModel,
-  b: CounterModel
-};
-```
-
-### Deep Merge
-Let's upgrade to multi-level actions:
-```js
-export const WeatherModel = {
-  arctic: { low: 0, high: 0 }, // ❄
-  mordor: { low: 1000, high: 1000 }, // 🔥
-  coolerLows() {
-    return {
-      arctic: { low: this.arctic.low - 100 },
-      mordor: { low: this.mordor.low - 1000 }
-    };
-  },
-  hotterHighs() {
-    return {
-      arctic: { high: this.arctic.high + 100 },
-      mordor: { high: this.mordor.high + 1000 }
-    };
-  }
-};
-```
-
-In this case, after calling `coolerLows` or `hotterHighs` the child objects `arctic` and `mordor` will keep the rest of their properties. Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
-```js
-hotterHighs() {
-  return {
-    arctic: { ...this.arctic, high: this.arctic.high + 100 },
-    mordor: { ...this.mordor, high: this.mordor.high + 1000 }
-    //        ^^^ nope, don't spread your objects
-    //            we don't have to go deeper.jpg
-  };
-}
-```
-
-### Shallow Merge
-If you need more control over how data gets merged, use your own merge function:
-```js
-const store = createStore(ABCounterModel, { merge: Object.assign });
-// You're never happy with what you get for free, are you? 😞
-```
-
 ### Arrow Functions
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow functions might not work very well with Derpy either.
+
+### Rendering
+Okay, so you probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? And we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
+```js
+/** @jsx h */
+import { app } from 'derpy/app/picodom';
+import { h, patch } from 'picodom'; // or whatever VDOM goddess you worship
+import { CounterModel } from './counter-model';
+
+const store = app({
+  patch,
+  model: CounterModel,
+  view: ({ model }) =>
+    <div>
+      Your count is: {model.count}
+      <button onclick={model.down}>-</button>
+      <button onclick={model.up}>+</button>
+    </div>
+});
+// Or `app({...}, container);` - you can pass a custom DOM
+// element to render into, otherwise it's `document.body`.
+// ...
+// You're welcome. Remember I helped you get rich 💰
+```
+
+The `app` function is a very thin layer on top of Derpy to reduce boilerplate if you use [picodom](https://github.com/picodom/picodom) or a similar library. It uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
+
+You can write your own function to render the model however you want. For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
 ## Other FAQs
 ### Can I do funky stuff like return new actions dynamically, for code splitting and whatnot?
