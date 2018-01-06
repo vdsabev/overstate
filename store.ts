@@ -1,6 +1,6 @@
 import { Merge, RecursivePartial } from './merge';
 import { DeepProps } from './props';
-import { isFunction, isObject } from './utils';
+import { isFunction, isObject, isPromise } from './utils';
 
 export interface CreateStore {
   <T extends {}>(source: T, options?: StoreOptions): Store<T>;
@@ -60,10 +60,6 @@ export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
           if (isPromise(changes)) {
             changes.then((asyncChanges) => set(modelSlice, asyncChanges));
           }
-          // else if (isFunction(changes)) {
-          //   // TODO: Dynamic actions
-          //   set(modelSlice, changes);
-          // }
           else {
             set(modelSlice, changes);
           }
@@ -92,5 +88,3 @@ export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
     update
   };
 };
-
-const isPromise = <T>(promise: T | Promise<T>): promise is Promise<T> => promise != null && isFunction((promise as any).then);
