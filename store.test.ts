@@ -238,21 +238,35 @@ describe(`createStore`, () => {
   });
 
   describe(`dynamic functions`, () => {
-    interface Model {
+    interface CounterModel {
       count: number;
-      setState(state:Partial<Model>): Partial<Model>;
-      add?(count: number): Partial<Model>;
+      add?(count: number): Partial<CounterModel>;
     }
 
-    const model: Model = {
+    interface CounterModelSync extends CounterModel {
+      setState(state:Partial<CounterModel>): Partial<CounterModel>;
+    }
+
+    const counterModelSync: CounterModelSync = {
       count: 0,
       setState(state) {
         return state;
       }
     };
 
+    interface CounterModelAsync extends CounterModel {
+      setState(state:Partial<CounterModel>): Promise<Partial<CounterModel>>;
+    }
+
+    const counterModelAsync: CounterModelAsync = {
+      count: 0,
+      async setState(state) {
+        return state;
+      }
+    };
+
     it(`should add function from object`, () => {
-      const store = createStore(model);
+      const store = createStore(counterModelSync);
       store.model.setState({
         add(count: number) {
           return { count: this.count + count };
@@ -270,8 +284,19 @@ describe(`createStore`, () => {
         }
       }
 
-      const store = createStore(model);
+      const store = createStore(counterModelSync);
       store.model.setState(new Counter());
+      store.model.add(10);
+      expect(store.model.count).toBe(10);
+    });
+
+    it(`should add function asynchronously`, async () => {
+      const store = createStore(counterModelAsync);
+      await store.model.setState({
+        add(count: number) {
+          return { count: this.count + count };
+        }
+      });
       store.model.add(10);
       expect(store.model.count).toBe(10);
     });
