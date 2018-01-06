@@ -40,8 +40,6 @@ export const app: App = ({ model, view, patch, throttle }, container) => {
   const unsubscribe = store.subscribe(render);
   store.update();
 
-  return {
-    ...store,
-    destroy: unsubscribe
-  };
+  // Spread adds unnecessary lines to the project
+  return Object.assign(store, { destroy: unsubscribe });
 };
