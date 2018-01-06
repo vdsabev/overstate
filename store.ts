@@ -1,13 +1,16 @@
-import { Merge, RecursivePartial } from './merge';
-import { DeepProps } from './props';
-import { isFunction, isObject } from './utils';
+import { RecursivePartial, isPromise, merge, Merge } from './utils';
 
 export interface CreateStore {
-  <T extends {}>(source: T, options?: StoreOptions): Store<T>;
+  <T extends {}>(source?: T, options?: Partial<StoreOptions>): Store<T>;
+}
+
+export interface StoreOptions {
+  merge: Merge;
 }
 
 export interface Store<T extends {}> {
   readonly model: Readonly<T>;
+  set(data: RecursivePartial<T>): RecursivePartial<T>;
   subscribe(listener: StoreListener<T>): () => void;
   update(): void;
 }
@@ -16,18 +19,30 @@ export interface StoreListener<T extends {}> {
   (model: T): void;
 }
 
-export interface StoreOptions {
-  merge: Merge;
-  getDeepProps: DeepProps;
-}
+// TODO: Explore using `Object.defineProperty` instead of proxy functions
+/**
+ * Create a store from a source object, deep copying all values
+ * and proxying all functions to call subscriptions when executed.
+ */
+export const createStore: CreateStore = (source, options) => {
+  const model: typeof source = {} as any;
+  const listeners: StoreListener<typeof source>[] = [];
 
-// TODO: Explore using `Object.defineProperty` instead of proxy actions
-/** A lower-level function to create a store with your own options, e.g. merge from lodash */
-export const createStore: CreateStore = <T extends {}>(source: T, { merge, getDeepProps }: StoreOptions): Store<T> => {
-  const model: T = {} as any;
-  const listeners: StoreListener<T>[] = [];
+  if (!options) {
+    options = {};
+  }
 
-  const subscribe = (listener: StoreListener<T>) => {
+  if (!options.merge) {
+    options.merge = merge;
+  }
+
+  const set = (data: RecursivePartial<typeof source>) => {
+    const result = options.merge(model, data, createProxyFunction);
+    update();
+    return result;
+  }
+
+  const subscribe = (listener: StoreListener<typeof source>) => {
     listeners.push(listener);
     return () => {
       const indexOfListener = listeners.indexOf(listener);
@@ -37,57 +52,30 @@ export const createStore: CreateStore = <T extends {}>(source: T, { merge, getDe
     };
   };
 
-  const update = () => {
-    listeners.forEach((subscription) => subscription(model));
-  };
+  const update = () => listeners.forEach((subscription) => subscription(model));
 
-  const set = <U extends {}>(modelSlice: U, changes: RecursivePartial<U>) => {
-    // TODO: Proxy newly added actions to support dynamically changing actions
-    if (changes != null) {
-      merge(modelSlice, changes);
+  const createProxyFunction = <U extends {}>(fn: Function, slice: U) => (...args: any[]) => {
+    const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(slice, args);
+
+    if (isPromise(changes)) {
+      return changes.then((asyncChanges) => {
+        options.merge(slice, asyncChanges, createProxyFunction);
+        update();
+        return asyncChanges;
+      });
     }
+
+    options.merge(slice, changes, createProxyFunction);
     update();
+    return changes;
   };
 
-  // TODO: For class instances, perhaps proxy methods from `model.constructor.prototype`
-  const mergeSourceIntoModel = <U extends {}>(modelSlice: RecursivePartial<U>, sourceSlice: U) => {
-    if (sourceSlice == null) return;
-
-    getDeepProps(sourceSlice).forEach((key) => {
-      const sourceValue = (sourceSlice as any)[key];
-      if (isFunction(sourceValue)) {
-        (modelSlice as any)[key] = (...args: any[]) => {
-          const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = sourceValue.apply(modelSlice, args);
-          if (isPromise(changes)) {
-            changes.then((asyncChanges) => set(modelSlice, asyncChanges));
-          }
-          else {
-            set(modelSlice, changes);
-          }
-          return changes;
-        };
-      }
-      // We need to go deeper.jpg
-      else if (isObject(sourceValue)) {
-        if (!(modelSlice as any)[key]) {
-          (modelSlice as any)[key] = {};
-        }
-        mergeSourceIntoModel((modelSlice as any)[key], (sourceSlice as any)[key]);
-      }
-      // Initialize values
-      else {
-        (modelSlice as any)[key] = sourceValue;
-      }
-    });
-  };
-
-  mergeSourceIntoModel(model, source);
+  options.merge(model, source, createProxyFunction);
 
   return {
     model,
     subscribe,
+    set,
     update
   };
 };
-
-const isPromise = <T>(promise: T | Promise<T>): promise is Promise<T> => promise != null && isFunction((promise as any).then);

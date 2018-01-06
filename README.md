@@ -7,6 +7,21 @@
 # Derpy
 A silly little state manager 😋
 
+## Table of Contents
+1. [Hello World](#how-do-i-use-this-thing)
+2. [Store API](#whats-going-on-here)
+3. [Features](#features)
+    1. [Deep Merge](#deep-merge)
+    2. [Composition](#composition)
+    3. [Asynchronous Functions](#asynchronous-functions)
+    4. [Lazy Loading](#lazy-loading)
+    5. [TypeScript](#typescript)
+    6. [Classes](#classes)
+    7. [Arrow Functions](#arrow-functions)
+    8. [Rendering](#rendering)
+    9. [Custom Merge](#custom-merge)
+4. [FAQs](#faqs)
+
 ## How do I use this thing?
 ```js
 import { createStore } from 'derpy';
@@ -53,36 +68,67 @@ const unsubscribe = store.subscribe((model) => {
 });
 ```
 
-### store.model
+### `store.model`
 The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically invoke all subscriptions created by `store.subscribe` calls.
 
 All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
 
-### store.subscribe
+### `store.set`
+Merges some data into the store model and calls `update`. Functions are proxied to update the state automatically when called.
+
+### `store.subscribe`
 `subscribe` is called automatically every time you invoke a model function that returns a non-null value.
 
 The `store.subscribe` function returns an `unsubscribe` function which you can call at any time to remove the subscription.
 
 Tread lightly when rendering in subscriptions - they're not throttled or rate-limited in any way!
 
-### store.update
+### `store.update`
 Call `store.update()` to invoke all subscriptions manually. You usually only do this once after creating the store.
 
 ## Features
+### Deep Merge
+Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to. For example:
+```js
+const store = createStore({
+  a: { aa: 1, bb: 3 },
+  b: { aa: 2, bb: 4 }
+});
+store.set({
+  a: { aa: 5 },
+  b: { aa: 6 }
+});
+/*
+  The model data will now be:
+  a: { aa: 5, bb: 3 },
+  b: { aa: 6, bb: 4 }
+*/
+```
+
+`store.set` is a useful built-in shortcut for this:
+```js
+const store = createStore({
+  set(data) {
+    return data;
+  }
+  // ^^^ why not use the built-in `store.set` instead of `store.model.set`? 🦀
+});
+```
+
 ### Composition
 You can put models inside models, y'all:
 ```js
 // we have to go deeper.jpg
 export const ABCounterModel = {
-  a: CounterModel,
-  b: CounterModel
+  counterA: CounterModel,
+  counterB: CounterModel
 };
 ```
 
 This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Asynchronous Functions
-Promises are supported out of the box - subscriptions will be called after the promise resolves, so async programming is as simple as it can be:
+Promises are supported out of the box - subscriptions are called after the promise resolves, so async programming is as simple as it can be:
 ```js
 export const CounterModel = {
   count: 0,
@@ -96,44 +142,11 @@ export const CounterModel = {
 };
 ```
 
-### Deep Merge
-Let's upgrade to multi-level actions:
+### Lazy Loading
+So you want to do [code splitting](https://webpack.js.org/api/module-methods/#import) or put data in the model at some later point? Good news:
 ```js
-export const WeatherModel = {
-  arctic: { low: 0, high: 0 }, // ❄
-  mordor: { low: 1000, high: 1000 }, // 🔥
-  coolerLows() {
-    return {
-      arctic: { low: this.arctic.low - 100 },
-      mordor: { low: this.mordor.low - 1000 }
-    };
-  },
-  hotterHighs() {
-    return {
-      arctic: { high: this.arctic.high + 100 },
-      mordor: { high: this.mordor.high + 1000 }
-    };
-  }
-};
-```
-
-In this case, after calling `coolerLows` or `hotterHighs` the child objects `arctic` and `mordor` will keep the rest of their properties. Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to, or having to write this:
-```js
-hotterHighs() {
-  return {
-    arctic: { ...this.arctic, high: this.arctic.high + 100 },
-    mordor: { ...this.mordor, high: this.mordor.high + 1000 }
-    //        ^^^ nope, don't spread your objects
-    //            we don't have to go deeper.jpg
-  };
-}
-```
-
-### Shallow Merge
-If you need more control over how data gets merged, use your own merge function:
-```js
-const store = createStore(ABCounterModel, { merge: Object.assign });
-// You're never happy with what you get for free, are you? 😞
+const store = createStore();
+import('./counter-model').then((CounterModel) => store.set({ counter: CounterModel }));
 ```
 
 ### TypeScript
@@ -182,7 +195,10 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow functions might not work very well with Derpy either.
 
 ### Rendering
-Okay, so you probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? And we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
+You can render the model in endless shapes most beautiful 💅
+For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
+
+You probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? Well, we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
 import { app } from 'derpy/app/picodom';
@@ -205,14 +221,31 @@ const store = app({
 // You're welcome. Remember I helped you get rich 💰
 ```
 
-The `app` function is a very thin layer on top of Derpy to reduce boilerplate if you use [picodom](https://github.com/picodom/picodom) or a similar library. It uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
+The `app` function is a very thin layer on top of Derpy to reduce boilerplate if you use [picodom](https://github.com/picodom/picodom) or a similar library. It also adds a custom `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will work just the same.
 
-You can write your own function to render the model however you want. For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
+Calling `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
 
-## Other FAQs
-### Can I do funky stuff like return new actions dynamically, for code splitting and whatnot?
-It's on the roadmap, which means I thought about doing it once, but was too lazy to write it myself. Care to make a pull request?
+### Custom Merge
+If you need more control over how data gets merged, use your own merge function:
+```js
+const store = createStore(model, {
+  merge(target, source, createProxyFunction) {
+    for (let key in source) {
+      if (typeof source[key] === 'function') {
+        // Proxy functions so they automatically resolve promises and update state
+        target[key] = createProxyFunction(source[key], target);
+      }
+      else {
+        target[key] = source[key]; // Yay, shallow merge! 🎉
+      }
+    }
+    return target;
+  }
+});
+// You're never happy with what you get for free, are you? 😞
+```
 
+## FAQs
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
 - Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/derpy/issues)
@@ -220,9 +253,9 @@ I'm glad you asked! Here are some useful resources:
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
 ### Wait, I want to run this library on a potato, how big is it?
-Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1.7KB, or 953 bytes gzipped. I hope you're happy.
+Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is 1278 bytes, or 789 bytes gzipped. I hope you're happy.
 
-No? If you really want to go all the way down in size, you can import individual files like `derpy/store` directly and see if that helps you. I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
+I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
 
 ### This code offends me and my cat
 Hey, this isn't a question! Don't you have something better to be upset about, like global puberty or senseless acts of violins?

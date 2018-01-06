@@ -6,7 +6,7 @@ export interface App {
 }
 
 export interface AppStore<T extends {}> extends Store<T> {
-  destroy(): void;
+  destroy?(): void;
 }
 
 export interface AppOptions<T extends {}> {
@@ -36,10 +36,9 @@ export const app: App = ({ model, view, patch, throttle }, container) => {
     patch(container, container = view({ model: updatedModel }));
   });
 
-  const store = createStore(model);
-  const unsubscribe = store.subscribe(render);
+  const store: AppStore<typeof model> = createStore(model);
+  store.destroy = store.subscribe(render);
   store.update();
 
-  // Spread adds unnecessary lines to the project
-  return Object.assign(store, { destroy: unsubscribe });
+  return store;
 };

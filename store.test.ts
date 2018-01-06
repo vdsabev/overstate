@@ -1,28 +1,63 @@
-import { createStore, merge, getDeepProps } from './index';
-import * as _store from './store';
+import { createStore } from './index';
 
 describe(`createStore`, () => {
-  it(`should provide 'merge' and 'getDeepProps' functions for 'store.createStore'`, () => {
-    const model = { a: 1, b: 2, c: 3 };
-    expect(
-      createStore(model).model
-    ).toEqual(
-      _store.createStore(model, { merge, getDeepProps }).model
-    );
-  });
+  describe(`options`, () => {
+    it(`should allow passing empty object as options`, () => {
+      const model = {};
+      const store = createStore(model, {});
+      expect(store.model).toEqual(model);
+    });
 
-  it(`should allow overriding 'merge' and 'getDeepProps' functions`, () => {
-    const model = { a: 1, b: 2, c: 3 };
-    expect(
-      createStore(model, { merge, getDeepProps }).model
-    ).toEqual(
-      _store.createStore(model, { merge, getDeepProps }).model
-    );
+    it(`should allow passing a custom merge function, which will be called`, () => {
+      const merge = jest.fn();
+      const model = {};
+      const store = createStore(model, { merge });
+      expect(merge).toHaveBeenCalledTimes(1);
+    });
+
+    it(`should update state with custom merge`, () => {
+      interface Model {
+        state: any;
+        setState(state: any): any;
+      }
+
+      const model: Model = {
+        state: {},
+        setState(state) {
+          return { state };
+        }
+      };
+
+      const store = createStore(model, {
+        merge(target: any, source: any, createProxyFunction: Function) {
+          for (let key in source) {
+            if (typeof source[key] === 'function') {
+              target[key] = createProxyFunction(source[key], target);
+            }
+            else {
+              target[key] = source[key];
+            }
+          }
+          return target;
+        }
+      });
+
+      store.model.setState({ a: 1 });
+      expect(store.model.state).toEqual({ a: 1 });
+
+      store.model.setState({ b: 2 });
+      expect(store.model.state).toEqual({ b: 2 });
+    });
   });
 
   describe(`model`, () => {
+    it(`should be empty when created with no model`, () => {
+      const store = createStore();
+      expect(store.model).toEqual({});
+    });
+
     it(`should be empty when created with null`, () => {
-      const store = createStore(null);
+      const store = createStore();
       expect(store.model).toEqual({});
     });
 
@@ -130,6 +165,30 @@ describe(`createStore`, () => {
       const store = createStore(model);
       store.model.add(10);
       expect(store.model.count).toBe(10);
+    });
+  });
+
+  describe(`set`, () => {
+    it(`should set model`, () => {
+      const store = createStore({});
+      store.set({ a: 1 });
+      expect(store.model).toEqual({ a: 1 });
+      store.set({ b: 2 });
+      expect(store.model).toEqual({ a: 1, b: 2 });
+    });
+
+    it(`should set model async`, async () => {
+      const store = createStore({});
+      store.set({ a: await Promise.resolve(1) });
+      expect(store.model).toEqual({ a: 1 });
+    });
+
+    it(`should call listeners`, () => {
+      const listener = jest.fn();
+      const store = createStore({});
+      store.subscribe(listener);
+      store.set({ a: 1 });
+      expect(listener).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -253,6 +312,71 @@ describe(`createStore`, () => {
       catch (error) {
         expect(error).toBe(`Error`);
       }
+    });
+  });
+
+  describe(`dynamic functions`, () => {
+    interface CounterModel {
+      count: number;
+      add?(count: number): Partial<CounterModel>;
+    }
+
+    interface CounterModelSync extends CounterModel {
+      set(state:Partial<CounterModel>): Partial<CounterModel>;
+    }
+
+    const counterModelSync: CounterModelSync = {
+      count: 0,
+      set(state) {
+        return state;
+      }
+    };
+
+    interface CounterModelAsync extends CounterModel {
+      set(state:Partial<CounterModel>): Promise<Partial<CounterModel>>;
+    }
+
+    const counterModelAsync: CounterModelAsync = {
+      count: 0,
+      async set(state) {
+        return state;
+      }
+    };
+
+    it(`should add function from object`, () => {
+      const store = createStore(counterModelSync);
+      store.model.set({
+        add(count: number) {
+          return { count: this.count + count };
+        }
+      });
+      store.model.add(10);
+      expect(store.model.count).toBe(10);
+    });
+
+    it(`should add function from class instance`, () => {
+      class Counter {
+        count?: number;
+        add(count: number) {
+          return { count: this.count + count };
+        }
+      }
+
+      const store = createStore(counterModelSync);
+      store.model.set(new Counter());
+      store.model.add(10);
+      expect(store.model.count).toBe(10);
+    });
+
+    it(`should add function asynchronously`, async () => {
+      const store = createStore(counterModelAsync);
+      await store.model.set({
+        add(count: number) {
+          return { count: this.count + count };
+        }
+      });
+      store.model.add(10);
+      expect(store.model.count).toBe(10);
     });
   });
 
