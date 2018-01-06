@@ -68,6 +68,10 @@ describe('merge', () => {
     const r = { a: 1, b: { aa: fa, bb: fb, cc: 3, dd: 4 }, c: fc };
     expect(merge(x, y)).toEqual(r);
   });
+
+  it('should not throw error when trying to access protected properties of function', () => {
+    expect(() => merge({}, function () {})).not.toThrowError();
+  });
 });
 
 describe('getAllProps', () => {

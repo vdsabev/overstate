@@ -28,6 +28,10 @@ export const merge: Merge = (target, source, createProxyFunction) => {
 
   if (source != null) {
     getAllProps(source).forEach((key) => {
+      // TypeError: 'caller', 'callee', and 'arguments' properties may not be accessed
+      // on strict mode functions or the arguments objects for calls to them
+      if (isFunction(source) && key === 'caller' || key === 'callee' || key === 'arguments') return;
+
       const sourceValue = source[key];
       // We need to go deeper.jpg
       if (isObject(sourceValue)) {
