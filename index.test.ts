@@ -1,5 +1,4 @@
-import { createStore, merge, getDeepProps, app } from './index';
-import * as _app from './app';
+import { createStore, merge, getDeepProps } from './index';
 import * as _store from './store';
 
 describe(`createStore`, () => {
@@ -284,25 +283,5 @@ describe(`createStore`, () => {
       store.update();
       expect(listener).not.toHaveBeenCalled();
     });
-  });
-});
-
-describe(`app`, () => {
-  const options: any = { model: { a: 1, b: 2, c: 3 }, view: () => {}, patch: () => {} };
-
-  it(`should provide 'createStore' function for 'app'`, () => {
-    expect(
-      app(options).model
-    ).toEqual(
-      _app.app({ ...options, createStore }).model
-    );
-  });
-
-  it(`should allow overriding 'createStore' function for 'app'`, () => {
-    expect(
-      app({ ...options, createStore }).model
-    ).toEqual(
-      _app.app({ ...options, createStore }).model
-    );
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "derpy",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "license": "MIT",
   "main": "index.min.js",
   "module": "index.js",
@@ -25,11 +25,11 @@
   "jest": {
     "collectCoverage": true,
     "collectCoverageFrom": [
+      "!benchmarks/**",
       "!node_modules/**",
-      "!*.d.ts",
-      "!*.test.ts",
-      "!*.config.ts",
-      "*.ts"
+      "!**/*.d.ts",
+      "!**/*.test.ts",
+      "**/*.ts"
     ],
     "moduleFileExtensions": [
       "ts",

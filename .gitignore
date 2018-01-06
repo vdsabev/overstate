@@ -3,5 +3,7 @@ coverage
 node_modules
 *.log
 *.js
+*.js.map
+!*.config.js
 *.d.ts
 !derpy.d.ts
