@@ -11,8 +11,8 @@ export interface AppStore<T extends {}> extends Store<T> {
 
 export interface AppOptions<T extends {}> {
   model?: T;
-  view(props: { model: T }): Element;
-  patch(container: Element, node: Element): Element;
+  view(props: { model: T }): any;
+  patch(oldNode: any, newNode: any, ...args: any[]): any;
   throttle?(fn: Function): any;
 }
 
