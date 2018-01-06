@@ -68,10 +68,6 @@ describe('merge', () => {
     const r = { a: 1, b: { aa: fa, bb: fb, cc: 3, dd: 4 }, c: fc };
     expect(merge(x, y)).toEqual(r);
   });
-
-  it('should merge properties from X, Y, and Z', () => {
-    expect(merge({ a: 1 }, { b: 2 }, { c: 3 })).toEqual({ a: 1, b: 2, c: 3 });
-  });
 });
 
 describe('getDeepProps', () => {

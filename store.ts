@@ -1,4 +1,4 @@
-import { RecursivePartial, isFunction, isObject, isPromise, merge, getDeepProps } from './utils';
+import { RecursivePartial, isPromise, merge } from './utils';
 
 export interface CreateStore {
   <T extends {}>(source: T): Store<T>;
@@ -37,54 +37,23 @@ export const createStore: CreateStore = (source) => {
     listeners.forEach((subscription) => subscription(model));
   };
 
-  const createProxyFunction = <U extends {}>(fn: Function, modelSlice: U) => (...args: any[]) => {
-    const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(modelSlice, args);
+  const createProxyFunction = <U extends {}>(fn: Function, slice: U) => (...args: any[]) => {
+    const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(slice, args);
+
     if (isPromise(changes)) {
-      changes.then((asyncChanges) => set(modelSlice, asyncChanges));
+      return changes.then((asyncChanges) => {
+        merge(slice, asyncChanges, createProxyFunction);
+        update();
+        return asyncChanges;
+      });
     }
-    else {
-      set(modelSlice, changes);
-    }
+
+    merge(slice, changes, createProxyFunction);
+    update();
     return changes;
   };
 
-  const set = <U extends {}>(modelSlice: U, changes: RecursivePartial<U>) => {
-    if (changes != null) {
-      getDeepProps(changes).forEach((key) => {
-        const sourceValue = (changes as any)[key];
-        if (isFunction(sourceValue)) {
-          (changes as any)[key] = createProxyFunction(sourceValue, modelSlice);
-        }
-      });
-      merge(modelSlice, changes);
-    }
-    update();
-  };
-
-  // TODO: For class instances, perhaps proxy methods from `model.constructor.prototype`
-  const mergeSourceIntoModel = <U extends {}>(modelSlice: RecursivePartial<U>, sourceSlice: U) => {
-    if (sourceSlice == null) return;
-
-    getDeepProps(sourceSlice).forEach((key) => {
-      const sourceValue = (sourceSlice as any)[key];
-      if (isFunction(sourceValue)) {
-        (modelSlice as any)[key] = createProxyFunction(sourceValue, modelSlice);
-      }
-      // We need to go deeper.jpg
-      else if (isObject(sourceValue)) {
-        if (!(modelSlice as any)[key]) {
-          (modelSlice as any)[key] = {};
-        }
-        mergeSourceIntoModel((modelSlice as any)[key], (sourceSlice as any)[key]);
-      }
-      // Set value
-      else {
-        (modelSlice as any)[key] = sourceValue;
-      }
-    });
-  };
-
-  mergeSourceIntoModel(model, source);
+  merge(model, source, createProxyFunction);
 
   return {
     model,
