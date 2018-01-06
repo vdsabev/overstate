@@ -1,7 +1,7 @@
 import { isObject } from './utils';
 
 /** A simple deep merge function that mutates the target object */
-export const merge = <T extends {}>(x: RecursivePartial<T>, ...args: RecursivePartial<T>[]): RecursivePartial<T> => {
+export const merge: Merge = (x, ...args) => {
   if (!isObject(x)) {
     throw new Error(`Invalid merge target, expected an object, got ${JSON.stringify(x, null, 2)}`);
   }
@@ -10,7 +10,7 @@ export const merge = <T extends {}>(x: RecursivePartial<T>, ...args: RecursivePa
     for (let key in y) {
       if (y.hasOwnProperty(key)) {
         const isDeep = x != null && x.hasOwnProperty(key) && isObject(x[key]);
-        x[key] = isDeep ? merge(x[key], y[key]) : y[key];
+        (x[key] as any) = isDeep ? merge(x[key], y[key]) : y[key];
       }
     }
   });
@@ -18,8 +18,8 @@ export const merge = <T extends {}>(x: RecursivePartial<T>, ...args: RecursivePa
   return x;
 };
 
-export interface Merge<T extends {} = any> {
-  (x: RecursivePartial<T>, ...args: RecursivePartial<T>[]): RecursivePartial<T>;
+export interface Merge {
+  <T extends {} = any>(x: RecursivePartial<T>, ...args: RecursivePartial<T>[]): RecursivePartial<T>;
 }
 
 export type RecursivePartial<T> = {

@@ -23,11 +23,11 @@ export interface StoreOptions {
 
 // TODO: Explore using `Object.defineProperty` instead of proxy actions
 /** A lower-level function to create a store with your own options, e.g. merge from lodash */
-export const createStore: CreateStore = <T extends {}>(source: T, { merge, getDeepProps }: StoreOptions): Store<T> => {
-  const model: T = {} as any;
-  const listeners: StoreListener<T>[] = [];
+export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
+  const model: typeof source = {} as any;
+  const listeners: StoreListener<typeof source>[] = [];
 
-  const subscribe = (listener: StoreListener<T>) => {
+  const subscribe = (listener: StoreListener<typeof source>) => {
     listeners.push(listener);
     return () => {
       const indexOfListener = listeners.indexOf(listener);
@@ -42,7 +42,6 @@ export const createStore: CreateStore = <T extends {}>(source: T, { merge, getDe
   };
 
   const set = <U extends {}>(modelSlice: U, changes: RecursivePartial<U>) => {
-    // TODO: Proxy newly added actions to support dynamically changing actions
     if (changes != null) {
       merge(modelSlice, changes);
     }
@@ -61,6 +60,10 @@ export const createStore: CreateStore = <T extends {}>(source: T, { merge, getDe
           if (isPromise(changes)) {
             changes.then((asyncChanges) => set(modelSlice, asyncChanges));
           }
+          // else if (isFunction(changes)) {
+          //   // TODO: Dynamic actions
+          //   set(modelSlice, changes);
+          // }
           else {
             set(modelSlice, changes);
           }

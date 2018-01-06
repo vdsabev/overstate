@@ -1,5 +1,5 @@
 // https://stackoverflow.com/questions/30881632/es6-iterate-over-class-methods
-export const getDeepProps: DeepProps = <T extends {}>(x: T): string[] => (
+export const getDeepProps: DeepProps = (x): string[] => (
   x != null
   &&
   x !== Object.prototype
@@ -12,6 +12,6 @@ export const getDeepProps: DeepProps = <T extends {}>(x: T): string[] => (
 
 const notConstructor = (key: string) => key !== 'constructor';
 
-export interface DeepProps<T extends {} = {}> {
-  (x: T): string[];
+export interface DeepProps {
+  <T extends {} = {}>(x: T): string[];
 }
