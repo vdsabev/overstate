@@ -21,7 +21,7 @@ export interface StoreOptions {
   getDeepProps: DeepProps;
 }
 
-// TODO: Explore using `Object.defineProperty` instead of proxy actions
+// TODO: Explore using `Object.defineProperty` instead of proxy functions
 /** A lower-level function to create a store with your own options, e.g. merge from lodash */
 export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
   const model: typeof source = {} as any;
@@ -41,21 +41,23 @@ export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
     listeners.forEach((subscription) => subscription(model));
   };
 
+  const createProxyFunction = <U extends {}>(fn: Function, modelSlice: U) => (...args: any[]) => {
+    const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(modelSlice, args);
+    if (isPromise(changes)) {
+      changes.then((asyncChanges) => set(modelSlice, asyncChanges));
+    }
+    else {
+      set(modelSlice, changes);
+    }
+    return changes;
+  };
+
   const set = <U extends {}>(modelSlice: U, changes: RecursivePartial<U>) => {
     if (changes != null) {
       getDeepProps(changes).forEach((key) => {
         const changeValue = (changes as any)[key];
         if (isFunction(changeValue)) {
-          (changes as any)[key] = (...args: any[]) => {
-            const changes2: RecursivePartial<U> | Promise<RecursivePartial<U>> = changeValue.apply(modelSlice, args);
-            if (isPromise(changes2)) {
-              changes2.then((asyncChanges) => set(modelSlice, asyncChanges));
-            }
-            else {
-              set(modelSlice, changes2);
-            }
-            return changes;
-          };
+          (changes as any)[key] = createProxyFunction(changeValue, modelSlice);
         }
       });
       merge(modelSlice, changes);
@@ -70,16 +72,7 @@ export const createStore: CreateStore = (source, { merge, getDeepProps }) => {
     getDeepProps(sourceSlice).forEach((key) => {
       const sourceValue = (sourceSlice as any)[key];
       if (isFunction(sourceValue)) {
-        (modelSlice as any)[key] = (...args: any[]) => {
-          const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = sourceValue.apply(modelSlice, args);
-          if (isPromise(changes)) {
-            changes.then((asyncChanges) => set(modelSlice, asyncChanges));
-          }
-          else {
-            set(modelSlice, changes);
-          }
-          return changes;
-        };
+        (modelSlice as any)[key] = createProxyFunction(sourceValue, modelSlice);
       }
       // We need to go deeper.jpg
       else if (isObject(sourceValue)) {

@@ -111,7 +111,7 @@ export const CounterModel = {
 ```
 
 ### Deep Merge
-Let's upgrade to multi-level actions:
+Let's upgrade to multi-level objects:
 ```js
 export const WeatherModel = {
   arctic: { low: 0, high: 0 }, // ❄

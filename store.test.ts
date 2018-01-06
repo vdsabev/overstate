@@ -112,29 +112,6 @@ describe(`createStore`, () => {
       store.model.add(10);
       expect(store.model.count).toBe(10);
     });
-
-    it(`should support dynamic actions`, () => {
-      interface Model {
-        count: number;
-        setState(state:Partial<Model>): Partial<Model>;
-        add?(count: number): Partial<Model>;
-      }
-
-      const model: Model = {
-        count: 0,
-        setState(state) {
-          return state;
-        }
-      };
-      const store = createStore(model);
-      store.model.setState({
-        add(count: number) {
-          return { count: this.count + count };
-        }
-      });
-      store.model.add(10);
-      expect(store.model.count).toBe(10);
-    });
   });
 
   describe(`deep model`, () => {
@@ -257,6 +234,46 @@ describe(`createStore`, () => {
       catch (error) {
         expect(error).toBe(`Error`);
       }
+    });
+  });
+
+  describe(`dynamic functions`, () => {
+    interface Model {
+      count: number;
+      setState(state:Partial<Model>): Partial<Model>;
+      add?(count: number): Partial<Model>;
+    }
+
+    const model: Model = {
+      count: 0,
+      setState(state) {
+        return state;
+      }
+    };
+
+    it(`should add function from object`, () => {
+      const store = createStore(model);
+      store.model.setState({
+        add(count: number) {
+          return { count: this.count + count };
+        }
+      });
+      store.model.add(10);
+      expect(store.model.count).toBe(10);
+    });
+
+    it(`should add function from class instance`, () => {
+      class Counter {
+        count?: number;
+        add(count: number) {
+          return { count: this.count + count };
+        }
+      }
+
+      const store = createStore(model);
+      store.model.setState(new Counter());
+      store.model.add(10);
+      expect(store.model.count).toBe(10);
     });
   });
 
