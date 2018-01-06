@@ -1,8 +1,22 @@
 {
+  "version": "0.6.2",
   "name": "derpy",
-  "version": "0.6.1",
+  "description": "A silly little state manager 😋",
+  "keywords": [
+    "derpy",
+    "model",
+    "state",
+    "state management",
+    "data flow"
+  ],
+  "repository": "vdsabev/derpy",
+  "author": {
+    "name" : "Vladimir Sabev",
+    "url" : "https://vdsabev.com"
+  },
   "license": "MIT",
   "main": "index.min.js",
+  "jsnext:main": "index.js",
   "module": "index.js",
   "types": "index.d.ts",
   "scripts": {

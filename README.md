@@ -143,11 +143,16 @@ export const ABCounterModel = {
 This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Lazy Loading
-So you want to do [code splitting](https://webpack.js.org/api/module-methods/#import) or put data in the model at some later point? Good news:
+So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import) or put some values and functions in the model at some later point? No problem:
 ```js
 const store = createStore();
-import('./counter-model').then((CounterModel) => store.set({ counter: CounterModel }));
+import('./counter-model').then((CounterModel) => {
+  store.set({ counter: CounterModel });
+  // `store.model.counter` is now available
+});
 ```
+
+When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically be able to update the data and invoke all subscriptions when called.
 
 ### TypeScript
 Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
