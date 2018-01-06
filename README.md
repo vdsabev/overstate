@@ -8,21 +8,22 @@
 A silly little state manager 😋
 
 ## Table of Contents
-1. [Hello World](#how-do-i-use-this-thing)
-2. [Store API](#whats-going-on-here)
-3. [Features](#features)
-    1. [Deep Merge](#deep-merge)
-    2. [Composition](#composition)
-    3. [Asynchronous Functions](#asynchronous-functions)
-    4. [Lazy Loading](#lazy-loading)
-    5. [TypeScript](#typescript)
-    6. [Classes](#classes)
-    7. [Arrow Functions](#arrow-functions)
-    8. [Rendering](#rendering)
-    9. [Custom Merge](#custom-merge)
-4. [FAQs](#faqs)
+- [Hello World](#hello-world)
+- [Counter](#counter)
+- [API Reference](#api-reference)
+- [Features](#features)
+    - [Deep Merge](#deep-merge)
+    - [Asynchronous Functions](#asynchronous-functions)
+    - [Composition](#composition)
+    - [Lazy Loading](#lazy-loading)
+    - [TypeScript](#typescript)
+    - [Classes](#classes)
+    - [Arrow Functions](#arrow-functions)
+    - [Rendering](#rendering)
+    - [Custom Merge](#custom-merge)
+- [FAQs](#faqs)
 
-## How do I use this thing?
+## Hello World
 ```js
 import { createStore } from 'derpy';
 
@@ -39,14 +40,13 @@ store.update();
 
 Calling `store.update()` initially renders `"Hello World"`.
 
-Calling `store.model.setNameTo('😋')` anywhere in your application renders `"Hello 😋"`, and so on.
+Calling `store.model.setNameTo('😋')` anytime renders `"Hello 😋"` and so on.
 
-## What's going on here?
-Let's go through another example.
-
-First, define the properties and functions of your app:
+## Counter
 ```js
-export const CounterModel = {
+import { createStore } from 'derpy';
+
+const store = createStore({
   count: 0,
   down() {
     return { count: this.count - 1 };
@@ -54,20 +54,20 @@ export const CounterModel = {
   up() {
     return { count: this.count + 1 };
   }
-};
-```
-
-Then create a store:
-```js
-import { createStore } from 'derpy';
-import { CounterModel } from './counter-model';
-
-const store = createStore(CounterModel);
-const unsubscribe = store.subscribe((model) => {
-  // Do whatever you want with your data
 });
+
+store.subscribe((model) => document.body.innerHTML = `Count: ${model.count}`);
+store.update();
 ```
 
+Calling `store.model.down()` or `store.model.up()` updates the count and calls the subscription function passed to `store.subscribe` with the new data.
+
+For example adding this code will increment the counter and rerender every second:
+```js
+setInterval(store.model.up, 1000);
+```
+
+## API Reference
 ### `store.model`
 The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically invoke all subscriptions created by `store.subscribe` calls.
 
@@ -115,18 +115,6 @@ const store = createStore({
 });
 ```
 
-### Composition
-You can put models inside models, y'all:
-```js
-// we have to go deeper.jpg
-export const ABCounterModel = {
-  counterA: CounterModel,
-  counterB: CounterModel
-};
-```
-
-This allows you to build the data tree of your dreams! 🌳🦄
-
 ### Asynchronous Functions
 Promises are supported out of the box - subscriptions are called after the promise resolves, so async programming is as simple as it can be:
 ```js
@@ -141,6 +129,18 @@ export const CounterModel = {
   }
 };
 ```
+
+### Composition
+You can put objects inside objects, y'all:
+```js
+// we have to go deeper.jpg
+export const ABCounterModel = {
+  counterA: CounterModel,
+  counterB: CounterModel
+};
+```
+
+This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Lazy Loading
 So you want to do [code splitting](https://webpack.js.org/api/module-methods/#import) or put data in the model at some later point? Good news:
@@ -253,7 +253,7 @@ I'm glad you asked! Here are some useful resources:
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
 ### Wait, I want to run this library on a potato, how big is it?
-Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is 1278 bytes, or 789 bytes gzipped. I hope you're happy.
+Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is 1234 bytes, or 769 bytes gzipped. I hope you're happy.
 
 I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
 
