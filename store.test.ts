@@ -51,8 +51,13 @@ describe(`createStore`, () => {
   });
 
   describe(`model`, () => {
+    it(`should be empty when created with no model`, () => {
+      const store = createStore();
+      expect(store.model).toEqual({});
+    });
+
     it(`should be empty when created with null`, () => {
-      const store = createStore(null);
+      const store = createStore();
       expect(store.model).toEqual({});
     });
 
@@ -160,6 +165,30 @@ describe(`createStore`, () => {
       const store = createStore(model);
       store.model.add(10);
       expect(store.model.count).toBe(10);
+    });
+  });
+
+  describe(`set`, () => {
+    it(`should set model`, () => {
+      const store = createStore({});
+      store.set({ a: 1 });
+      expect(store.model).toEqual({ a: 1 });
+      store.set({ b: 2 });
+      expect(store.model).toEqual({ a: 1, b: 2 });
+    });
+
+    it(`should set model async`, async () => {
+      const store = createStore({});
+      store.set({ a: await Promise.resolve(1) });
+      expect(store.model).toEqual({ a: 1 });
+    });
+
+    it(`should call listeners`, () => {
+      const listener = jest.fn();
+      const store = createStore({});
+      store.subscribe(listener);
+      store.set({ a: 1 });
+      expect(listener).toHaveBeenCalledTimes(1);
     });
   });
 

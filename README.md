@@ -11,14 +11,15 @@ A silly little state manager 😋
 1. [Hello World](#how-do-i-use-this-thing)
 2. [Store API](#whats-going-on-here)
 3. [Features](#features)
-    1. [Composition](#composition)
-    2. [Asynchronous Functions](#asynchronous-functions)
-    3. [TypeScript](#typescript)
-    4. [Classes](#classes)
-    5. [Arrow Functions](#arrow-functions)
-    6. [Deep Merge](#deep-merge)
-    7. [Custom Merge](#custom-merge)
+    1. [Deep Merge](#deep-merge)
+    2. [Composition](#composition)
+    3. [Asynchronous Functions](#asynchronous-functions)
+    4. [Lazy Loading](#lazy-loading)
+    5. [TypeScript](#typescript)
+    6. [Classes](#classes)
+    7. [Arrow Functions](#arrow-functions)
     8. [Rendering](#rendering)
+    9. [Custom Merge](#custom-merge)
 4. [FAQs](#faqs)
 
 ## How do I use this thing?
@@ -67,36 +68,67 @@ const unsubscribe = store.subscribe((model) => {
 });
 ```
 
-### store.model
+### `store.model`
 The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically invoke all subscriptions created by `store.subscribe` calls.
 
 All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
 
-### store.subscribe
+### `store.set`
+Merges some data into the store model and calls `update`. Functions are proxied to update the state automatically when called.
+
+### `store.subscribe`
 `subscribe` is called automatically every time you invoke a model function that returns a non-null value.
 
 The `store.subscribe` function returns an `unsubscribe` function which you can call at any time to remove the subscription.
 
 Tread lightly when rendering in subscriptions - they're not throttled or rate-limited in any way!
 
-### store.update
+### `store.update`
 Call `store.update()` to invoke all subscriptions manually. You usually only do this once after creating the store.
 
 ## Features
+### Deep Merge
+Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to. For example:
+```js
+const store = createStore({
+  a: { aa: 1, bb: 3 },
+  b: { aa: 2, bb: 4 }
+});
+store.set({
+  a: { aa: 5 },
+  b: { aa: 6 }
+});
+/*
+  The model data will now be:
+  a: { aa: 5, bb: 3 },
+  b: { aa: 6, bb: 4 }
+*/
+```
+
+`store.set` is a useful built-in shortcut for this:
+```js
+const store = createStore({
+  set(data) {
+    return data;
+  }
+  // ^^^ why not use the built-in `store.set` instead of `store.model.set`? 🦀
+});
+```
+
 ### Composition
 You can put models inside models, y'all:
 ```js
 // we have to go deeper.jpg
 export const ABCounterModel = {
-  a: CounterModel,
-  b: CounterModel
+  counterA: CounterModel,
+  counterB: CounterModel
 };
 ```
 
 This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Asynchronous Functions
-Promises are supported out of the box - subscriptions will be called after the promise resolves, so async programming is as simple as it can be:
+Promises are supported out of the box - subscriptions are called after the promise resolves, so async programming is as simple as it can be:
 ```js
 export const CounterModel = {
   count: 0,
@@ -108,6 +140,13 @@ export const CounterModel = {
     return Promise.resolve(1).then((value) => ({ count: this.count + value });
   }
 };
+```
+
+### Lazy Loading
+So you want to do [code splitting](https://webpack.js.org/api/module-methods/#import) or put data in the model at some later point? Good news:
+```js
+const store = createStore();
+import('./counter-model').then((CounterModel) => store.set({ counter: CounterModel }));
 ```
 
 ### TypeScript
@@ -155,61 +194,6 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 ### Arrow Functions
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow functions might not work very well with Derpy either.
 
-### Deep Merge
-Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to. For example:
-```js
-export const WeatherModel = {
-  arctic: { low: 0, high: 0 }, // ❄
-  mordor: { low: 1000, high: 1000 }, // 🔥
-  coolerLows() {
-    return {
-      arctic: { low: this.arctic.low - 100 },
-      mordor: { low: this.mordor.low - 1000 }
-    };
-  },
-  hotterHighs() {
-    return {
-      arctic: { high: this.arctic.high + 100 },
-      mordor: { high: this.mordor.high + 1000 }
-    };
-  }
-};
-```
-
-In this case, the child objects `arctic` and `mordor` will keep their `high` property after calling `coolerLows` and their `high` properties after calling `hotterHighs`.
-
-Basically, deep merging saves you from having to write this:
-```js
-hotterHighs() {
-  return {
-    arctic: { ...this.arctic, high: this.arctic.high + 100 },
-    mordor: { ...this.mordor, high: this.mordor.high + 1000 }
-    //        ^^^ nope, don't spread your objects
-    //            we don't have to go deeper.jpg
-  };
-}
-```
-
-### Custom Merge
-If you need more control over how data gets merged, use your own merge function:
-```js
-const store = createStore(model, {
-  merge(target, source, createProxyFunction) {
-    for (let key in source) {
-      if (typeof source[key] === 'function') {
-        // Proxy functions so they automatically resolve promises and update state
-        target[key] = createProxyFunction(source[key], target);
-      }
-      else {
-        target[key] = source[key]; // Yay, shallow merge! 🎉
-      }
-    }
-    return target;
-  }
-});
-// You're never happy with what you get for free, are you? 😞
-```
-
 ### Rendering
 You can render the model in endless shapes most beautiful 💅
 For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
@@ -240,6 +224,26 @@ const store = app({
 The `app` function is a very thin layer on top of Derpy to reduce boilerplate if you use [picodom](https://github.com/picodom/picodom) or a similar library. It also adds a custom `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will work just the same.
 
 Calling `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
+
+### Custom Merge
+If you need more control over how data gets merged, use your own merge function:
+```js
+const store = createStore(model, {
+  merge(target, source, createProxyFunction) {
+    for (let key in source) {
+      if (typeof source[key] === 'function') {
+        // Proxy functions so they automatically resolve promises and update state
+        target[key] = createProxyFunction(source[key], target);
+      }
+      else {
+        target[key] = source[key]; // Yay, shallow merge! 🎉
+      }
+    }
+    return target;
+  }
+});
+// You're never happy with what you get for free, are you? 😞
+```
 
 ## FAQs
 ### So this is cool, where can I find out more?

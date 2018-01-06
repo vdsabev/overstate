@@ -1,7 +1,7 @@
 import { RecursivePartial, isPromise, merge, Merge } from './utils';
 
 export interface CreateStore {
-  <T extends {}>(source: T, options?: Partial<StoreOptions>): Store<T>;
+  <T extends {}>(source?: T, options?: Partial<StoreOptions>): Store<T>;
 }
 
 export interface StoreOptions {
@@ -10,6 +10,7 @@ export interface StoreOptions {
 
 export interface Store<T extends {}> {
   readonly model: Readonly<T>;
+  set(data: RecursivePartial<T>): RecursivePartial<T>;
   subscribe(listener: StoreListener<T>): () => void;
   update(): void;
 }
@@ -35,6 +36,12 @@ export const createStore: CreateStore = (source, options) => {
     options.merge = merge;
   }
 
+  const set = (data: RecursivePartial<typeof source>) => {
+    const result = options.merge(model, data, createProxyFunction);
+    update();
+    return result;
+  }
+
   const subscribe = (listener: StoreListener<typeof source>) => {
     listeners.push(listener);
     return () => {
@@ -45,9 +52,7 @@ export const createStore: CreateStore = (source, options) => {
     };
   };
 
-  const update = () => {
-    listeners.forEach((subscription) => subscription(model));
-  };
+  const update = () => listeners.forEach((subscription) => subscription(model));
 
   const createProxyFunction = <U extends {}>(fn: Function, slice: U) => (...args: any[]) => {
     const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(slice, args);
@@ -70,6 +75,7 @@ export const createStore: CreateStore = (source, options) => {
   return {
     model,
     subscribe,
+    set,
     update
   };
 };
