@@ -7,6 +7,20 @@
 # Derpy
 A silly little state manager 😋
 
+## Table of Contents
+1. [Hello World](#how-do-i-use-this-thing)
+2. [Store API](#whats-going-on-here)
+3. [Features](#features)
+    1. [Composition](#composition)
+    2. [Asynchronous Functions](#asynchronous-functions)
+    3. [Deep Merge](#deep-merge)
+    4. [Shallow Merge](#shallow-merge)
+    5. [TypeScript](#typescript)
+    6. [Classes](#classes)
+    7. [Arrow Functions](#arrow-functions)
+    8. [Rendering](#rendering)
+4. [FAQs](#faqs)
+
 ## How do I use this thing?
 ```js
 import { createStore } from 'derpy';
@@ -182,7 +196,10 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow functions might not work very well with Derpy either.
 
 ### Rendering
-Okay, so you probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? And we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
+You can render the model in endless shapes most beautiful 💅
+For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
+
+You probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? Well, we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
 import { app } from 'derpy/app/picodom';
@@ -205,14 +222,11 @@ const store = app({
 // You're welcome. Remember I helped you get rich 💰
 ```
 
-The `app` function is a very thin layer on top of Derpy to reduce boilerplate if you use [picodom](https://github.com/picodom/picodom) or a similar library. It uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
+The `app` function is a very thin layer on top of Derpy to reduce boilerplate if you use [picodom](https://github.com/picodom/picodom) or a similar library. It also adds a custom `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will work just the same.
 
-You can write your own function to render the model however you want. For more examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
+Calling `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
 
-## Other FAQs
-### Can I do funky stuff like return new actions dynamically, for code splitting and whatnot?
-It's on the roadmap, which means I thought about doing it once, but was too lazy to write it myself. Care to make a pull request?
-
+## FAQs
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
 - Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/derpy/issues)
@@ -220,7 +234,7 @@ I'm glad you asked! Here are some useful resources:
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
 ### Wait, I want to run this library on a potato, how big is it?
-Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1.7KB, or 953 bytes gzipped. I hope you're happy.
+Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1.4KB, or 836 bytes gzipped. I hope you're happy.
 
 No? If you really want to go all the way down in size, you can import individual files like `derpy/store` directly and see if that helps you. I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
 
