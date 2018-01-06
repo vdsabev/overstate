@@ -253,7 +253,7 @@ I'm glad you asked! Here are some useful resources:
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
 ### Wait, I want to run this library on a potato, how big is it?
-Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is around 1162 bytes, or 747 bytes gzipped. I hope you're happy.
+Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is 1220 bytes, or 764 bytes gzipped. I hope you're happy.
 
 I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
 
