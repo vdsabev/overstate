@@ -61,14 +61,14 @@ store.update();
 
 Calling `store.model.down()` or `store.model.up()` updates the count and calls the subscription function passed to `store.subscribe` with the new data.
 
-For example adding this code will increment the counter and rerender every second:
+For example, adding this code will increment the counter and render it every second:
 ```js
 setInterval(store.model.up, 1000);
 ```
 
 ## API Reference
 ### `createStore`
-Creates a store from a source object, deep copying all values and proxying all functions to call subscriptions when executed.
+Creates a store from a source object, deep copying all values and proxying all functions to call `update` when executed.
 
 Can optionally receive a second argument to customize behavior:
 ```js
@@ -76,13 +76,15 @@ const store = createStore(model, { merge: customMergeFunction });
 ```
 
 ### `store.model`
-The model is an object composed of all values and proxied functions you passed to `createStore`.
+An object composed of all values and proxied functions passed to `createStore`.
+
+To call suscriptions when proxied, model functions should return (or resolve to) an object.
 
 ### `store.set`
-Merges some data into the store model and calls `update`. Functions are proxied to update the state automatically when called.
+Merges some data into the store model at the root level and calls `update`.
 
 ### `store.subscribe`
-Takes a function that will be called automatically every time you call a function in `store.model` that returns (or resolves to) an object.
+Calls the passed callback function every time a model function that returns (or resolves to) an object is executed.
 
 Returns an `unsubscribe` function that you can call to remove the subscription.
 
@@ -138,7 +140,7 @@ const store = createStore(model, {
 </details>
 
 ### Asynchronous Functions
-Promises are supported out of the box - subscriptions are called after the promise resolves, so async programming is as simple as it can be:
+Promises are supported out of the box - subscriptions are called after the promise resolves:
 ```js
 export const CounterModel = {
   count: 0,

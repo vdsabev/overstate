@@ -1,5 +1,5 @@
 {
-  "version": "0.6.2",
+  "version": "0.6.3",
   "name": "derpy",
   "description": "A silly little state manager 😋",
   "keywords": [
@@ -11,8 +11,8 @@
   ],
   "repository": "vdsabev/derpy",
   "author": {
-    "name" : "Vladimir Sabev",
-    "url" : "https://vdsabev.com"
+    "name": "Vladimir Sabev",
+    "url": "https://vdsabev.com"
   },
   "license": "MIT",
   "main": "index.min.js",
