@@ -59,7 +59,7 @@ store.subscribe((model) => document.body.innerHTML = `Count: ${model.count}`);
 store.update();
 ```
 
-Calling `store.model.down()` or `store.model.up()` updates the count and calls the subscription function passed to `store.subscribe` with the new data.
+Calling `store.model.down()` or `store.model.up()` updates the count and calls the function passed to `store.subscribe` with the new data.
 
 For example, adding this code will increment the counter and render it every second:
 ```js
@@ -95,7 +95,7 @@ const store = createStore({
 In that case, `store.set` will do the same thing as `store.model.set`.
 
 ### `store.subscribe`
-Calls the passed callback function every time a model function that returns (or resolves to) an object is executed.
+Calls the passed function every time a model function that returns (or resolves to) an object is executed.
 
 Returns an `unsubscribe` function that you can call to remove the subscription.
 
@@ -139,7 +139,7 @@ const store = createStore(model, {
 </details>
 
 ### Asynchronous Functions
-Promises are supported out of the box - subscriptions are called after the promise resolves:
+Promises are supported out of the box - `update` is called after the promise resolves:
 ```js
 export const CounterModel = {
   count: 0,
@@ -185,7 +185,7 @@ import('./yet-another-model').then((exports) => store.set({ C: exports.default }
 import('./utils-model').then((exports) => store.set({ utils: exports }));
 ```
 
-    When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically be able to update the data and call all subscriptions.
+    When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically call `store.update` when executed.
   </p>
 </details>
 
