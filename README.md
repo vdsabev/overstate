@@ -218,7 +218,7 @@ Then define your store and load the models:
 
 ```js
 const store = createStore({ lazy: LazyLoadedModel });
-loadmodel.lazy.loadChildModels();
+store.model.lazy.loadChildModels();
 ```
 
 The child models will be inserted into the model's data when the import is done.
@@ -263,6 +263,7 @@ export const LazyLoadedModel = {
     // Get all exports
     this.import('./utils-model', 'utils');
   }
+};
 ```
   </p>
 </details>
@@ -273,7 +274,7 @@ Derpy is written in TypeScript, so if you use it you get autocomplete and type c
 store.model.up(5); // [ts] Expected 0 arguments, but got 1.
 ```
 
-However, `this` doesn't work as well inside objects:
+However, `this` doesn't get type definitions inside objects:
 ```ts
 export const CounterModel = {
   count: 0,
@@ -301,26 +302,20 @@ export class CounterModel {
 And then when creating your store:
 ```ts
 const store = createStore(new CounterModel());
-```
-
-Behold:
-```ts
 store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parameter of type 'number'.
-// magic.gif
 ```
 
 ### Arrow Functions
-Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Class methods defined as arrow functions might not work very well with Derpy either.
+Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Because functions are proxied when the store is created, class methods defined as arrow functions won't refer to the correct `this` either.
 
 ### Rendering
-You can render the model in endless shapes most beautiful 💅
 For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
-You probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? Well, we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
+Here's a counter example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
 import { app } from 'derpy/app/picodom';
-import { h, patch } from 'picodom'; // or whatever VDOM goddess you worship
+import { h, patch } from 'picodom';
 import { CounterModel } from './counter-model';
 
 const store = app({
@@ -333,10 +328,9 @@ const store = app({
       <button onclick={model.up}>+</button>
     </div>
 });
-// You're welcome. Remember I helped you get rich 💰
 ```
 
-Notice that all functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`. Neat 👌
+All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
 
 The `app` function is a very thin layer on top of Derpy to reduce boilerplate.
 
@@ -344,7 +338,7 @@ You can pass a custom DOM element to render into as the second argument, which i
 
 It also adds a `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will still work just fine.
 
-`app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
+`app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`.
 
 ## FAQs
 ### So this is cool, where can I find out more?
@@ -354,9 +348,4 @@ I'm glad you asked! Here are some useful resources:
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
 ### Wait, I want to run this library on a potato, how big is it?
-Always going on about size, are you? Well, [the minified code](https://unpkg.com/derpy) is 1234 bytes, or 769 bytes gzipped. I hope you're happy.
-
-I think we all know why you're so obsessed with size though, and we're secretly laughing at you.
-
-### This code offends me and my cat
-Hey, this isn't a question! Don't you have something better to be upset about, like global puberty or senseless acts of violins?
+The [minified code](https://unpkg.com/derpy) is 1234 bytes, or 769 bytes gzipped.
