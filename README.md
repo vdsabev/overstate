@@ -115,8 +115,7 @@ store.set({                 a: { aa: 5        }, b: { aa: 6        } });
 
 <details>
   <summary>Custom merge</summary>
-  <p>
-    Merging can be customized to fit your application's needs. Pass a merge function as an option when creating your store:
+  <p>Merging can be customized to fit your application's needs. Pass a merge function as an option when creating your store:
 
 ```js
 const store = createStore(model, {
@@ -154,9 +153,8 @@ export const CounterModel = {
 ```
 
 ### Composition
-You can put objects inside objects, y'all:
+You can put objects inside objects:
 ```js
-// we have to go deeper.jpg
 export const ABCounterModel = {
   counterA: CounterModel,
   counterB: CounterModel
@@ -166,7 +164,9 @@ export const ABCounterModel = {
 This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Lazy Loading
-So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import), or put some values and functions in the model at some later point and have the functions automatically update data when called? Here are a couple of ways to do it:
+So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import), or put some values and functions in the model at some later point and have the functions automatically update data when called?
+
+Here are a few ways to do it:
 
 <details>
   <summary>Using the store directly</summary>
@@ -185,17 +185,16 @@ import('./yet-another-model').then((exports) => store.set({ C: exports.default }
 import('./utils-model').then((exports) => store.set({ utils: exports }));
 ```
 
-    When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically call `store.update` when executed.
+When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically call `store.update` when executed.
   </p>
 </details>
 
 <details>
   <summary>Using a function in the model</summary>
 
-  <p>
-    You shouldn't have to (and can't always) rely on the store being available. Encapsulating your models makes them decoupled from 3rd party libraries, which means they're easier to maintain and adaptable to flexible requirements.
+  <p>You shouldn't have to (and can't always) rely on the store being available. Encapsulating your models makes them decoupled from 3rd party libraries, which means they're easier to maintain and adaptable to flexible requirements.
 
-    So to lazy load data without touching the store, you can do this:
+So to lazy load data without touching the store, you can do this:
 
 ```js
 export const LazyLoadedModel = {
@@ -215,22 +214,21 @@ export const LazyLoadedModel = {
 };
 ```
 
-    Then define your store and load the models:
+Then define your store and load the models:
 
 ```js
 const store = createStore({ lazy: LazyLoadedModel });
 loadmodel.lazy.loadChildModels();
 ```
 
-    The child models will be inserted into the model's data when the import is done.
+The child models will be inserted into the model's data when the import is done.
   </p>
 </details>
 
 <details>
   <summary>Using a utility function</summary>
 
-  <p>
-    Defining a set function and messing with promises can get a little repetitive, so here's a utility function instead:
+  <p>Defining a set function and messing with promises can get a little repetitive, so here's a utility function instead:
 
 ```js
 export async function importModel(moduleName, properties) {
