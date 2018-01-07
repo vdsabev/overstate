@@ -76,9 +76,7 @@ const store = createStore(model, { merge: customMergeFunction });
 ```
 
 ### `store.model`
-The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically call all subscriptions created by `store.subscribe` calls.
-
-All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
+The model is an object composed of all values and proxied functions you passed to `createStore`.
 
 ### `store.set`
 Merges some data into the store model and calls `update`. Functions are proxied to update the state automatically when called.
@@ -336,15 +334,18 @@ const store = app({
       <button onclick={model.up}>+</button>
     </div>
 });
-// Or `app({...}, container);` - you can pass a custom DOM
-// element to render into, otherwise it's `document.body`.
-// ...
 // You're welcome. Remember I helped you get rich 💰
 ```
 
-The `app` function is a very thin layer on top of Derpy to reduce boilerplate. It also adds a custom `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will work just the same.
+Notice that all functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`. Neat 👌
 
-Calling `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
+The `app` function is a very thin layer on top of Derpy to reduce boilerplate.
+
+You can pass a custom DOM element to render into as the second argument, which is `document.body` by default.
+
+It also adds a `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will still work just fine.
+
+`app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
 
 ## FAQs
 ### So this is cool, where can I find out more?
