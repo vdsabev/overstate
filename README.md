@@ -76,7 +76,7 @@ const store = createStore(model, { merge: customMergeFunction });
 ```
 
 ### `store.model`
-The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically invoke all subscriptions created by `store.subscribe` calls.
+The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically call all subscriptions created by `store.subscribe` calls.
 
 All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
 
@@ -84,14 +84,14 @@ All functions in the model are bound to the correct context, so you can write `o
 Merges some data into the store model and calls `update`. Functions are proxied to update the state automatically when called.
 
 ### `store.subscribe`
-`subscribe` is called automatically every time you invoke a model function that returns (or resolves to) an object.
+Takes a function that will be called automatically every time you call a function in `store.model` that returns (or resolves to) an object.
 
-The `store.subscribe` function returns an `unsubscribe` function that you can call to remove the subscription.
+Returns an `unsubscribe` function that you can call to remove the subscription.
 
 Tread lightly when rendering in subscriptions - they're not throttled or rate-limited in any way!
 
 ### `store.update`
-Call `store.update()` to invoke all subscriptions manually. You usually only do this once after creating the store.
+Calls all subscriptions manually. You usually only do this once after creating the store.
 
 ## Features
 ### Deep Merge
@@ -186,7 +186,7 @@ import('./yet-another-model').then((exports) => store.set({ C: exports.default }
 import('./utils-model').then((exports) => store.set({ utils: exports }));
 ```
 
-    When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically be able to update the data and invoke all subscriptions when called.
+    When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically be able to update the data and call all subscriptions.
   </p>
 </details>
 
