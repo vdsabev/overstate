@@ -84,9 +84,9 @@ All functions in the model are bound to the correct context, so you can write `o
 Merges some data into the store model and calls `update`. Functions are proxied to update the state automatically when called.
 
 ### `store.subscribe`
-`subscribe` is called automatically every time you invoke a model function that returns a non-null value.
+`subscribe` is called automatically every time you invoke a model function that returns (or resolves to) an object.
 
-The `store.subscribe` function returns an `unsubscribe` function which you can call at any time to remove the subscription.
+The `store.subscribe` function returns an `unsubscribe` function that you can call to remove the subscription.
 
 Tread lightly when rendering in subscriptions - they're not throttled or rate-limited in any way!
 
