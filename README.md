@@ -90,19 +90,9 @@ Call `store.update()` to invoke all subscriptions manually. You usually only do 
 ### Deep Merge
 Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to. For example:
 ```js
-const store = createStore({
-  a: { aa: 1, bb: 3 },
-  b: { aa: 2, bb: 4 }
-});
-store.set({
-  a: { aa: 5 },
-  b: { aa: 6 }
-});
-/*
-  The model data will now be:
-  a: { aa: 5, bb: 3 },
-  b: { aa: 6, bb: 4 }
-*/
+const store = createStore({ a: { aa: 1, bb: 2 }, b: { aa: 3, bb: 4 } });
+store.set({                 a: { aa: 5        }, b: { aa: 6        } });
+// The model data is now ({ a: { aa: 5, bb: 2 }, b: { aa: 6, bb: 4 } });
 ```
 
 `store.set` is a useful built-in shortcut for this:
@@ -143,16 +133,56 @@ export const ABCounterModel = {
 This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Lazy Loading
-So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import) or put some values and functions in the model at some later point? No problem:
+So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import) or put some values and functions in the model at some later point? I got you covered:
 ```js
 const store = createStore();
-import('./counter-model').then((CounterModel) => {
-  store.set({ counter: CounterModel });
-  // `store.model.counter` is now available
-});
+
+// Get a named export
+import('./counter-model').then((exports) => store.set({ counter: exports.CounterModel }));
+// Get multiple named exports
+import('./another-model').then((exports) => store.set({ A: exports.ModelA, B: exports.ModelB }));
+// Get default export
+import('./yet-another-model').then((exports) => store.set({ C: exports.default }));
+// Get all exports
+import('./utils-model').then((exports) => store.set({ utils: exports }));
 ```
 
 When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically be able to update the data and invoke all subscriptions when called.
+
+<details><summary>Here's another approach with a function that you can use inside models without accessing the `store` directly</summary><p>
+
+```js
+export async function importModel(moduleName, properties) {
+  const moduleExports = await import(moduleName);
+
+  // Set all exports directly into the model, not in a subproperty
+  if (!properties) return moduleExports;
+
+  // All exports
+  if (typeof properties === 'string') return { [properties]: moduleExports };
+
+  // Some named exports (including default)
+  return Object.keys(properties).reduce((exports, key) => {
+    exports[key] = moduleExports[properties[key]];
+    return exports;
+  }, {});
+};
+```
+
+</p></details>
+
+```js
+const store = createStore(ImportModel);
+
+// Get a named export
+store.model.import('./counter-model', { counter: 'CounterModel' });
+// Get multiple named exports
+store.model.import('./another-model', { A: 'ModelA', B: 'ModelB' });
+// Get default export
+store.model.import('./yet-another-model', { C: 'default' });
+// Get all exports
+store.model.import('./utils-model', 'utils');
+```
 
 ### TypeScript
 Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
@@ -203,6 +233,8 @@ Be careful with those if you're using `this` inside your model functions - as ex
 You can render the model in endless shapes most beautiful 💅
 For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
+<!-- TODO: Make collapsible and / or side by side table without JSX -->
+
 You probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? Well, we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
@@ -231,6 +263,7 @@ The `app` function is a very thin layer on top of Derpy to reduce boilerplate if
 Calling `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
 
 ### Custom Merge
+<!-- TODO: Make collapsible -->
 If you need more control over how data gets merged, use your own merge function:
 ```js
 const store = createStore(model, {
