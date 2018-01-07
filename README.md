@@ -83,6 +83,17 @@ To call suscriptions when proxied, model functions should return (or resolve to)
 ### `store.set`
 Merges some data into the store model at the root level and calls `update`.
 
+It's a built-in shortcut for this:
+```js
+const store = createStore({
+  set(data) {
+    return data;
+  }
+});
+```
+
+In that case, `store.set` will do the same thing as `store.model.set`.
+
 ### `store.subscribe`
 Calls the passed callback function every time a model function that returns (or resolves to) an object is executed.
 
@@ -102,22 +113,10 @@ store.set({                 a: { aa: 5        }, b: { aa: 6        } });
 // The model data is now ({ a: { aa: 5, bb: 2 }, b: { aa: 6, bb: 4 } });
 ```
 
-`store.set` is a useful built-in shortcut for this:
-```js
-const store = createStore({
-  set(data) {
-    return data;
-  }
-});
-// In this case, `store.set` will do the same thing as `store.model.set`
-```
-
-Merging can be customized to fit your application's needs.
-
 <details>
   <summary>Custom merge</summary>
   <p>
-    Pass a merge function as an option when creating your store:
+    Merging can be customized to fit your application's needs. Pass a merge function as an option when creating your store:
 
 ```js
 const store = createStore(model, {
