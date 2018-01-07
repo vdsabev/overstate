@@ -20,7 +20,6 @@ A silly little state manager 😋
     - [Classes](#classes)
     - [Arrow Functions](#arrow-functions)
     - [Rendering](#rendering)
-    - [Custom Merge](#custom-merge)
 - [FAQs](#faqs)
 
 ## Hello World
@@ -68,6 +67,14 @@ setInterval(store.model.up, 1000);
 ```
 
 ## API Reference
+### `createStore`
+Creates a store from a source object, deep copying all values and proxying all functions to call subscriptions when executed.
+
+Can optionally receive a second argument to customize behavior:
+```js
+const store = createStore(model, { merge: customMergeFunction });
+```
+
 ### `store.model`
 The model is an object composed of all values and functions you passed to `createStore`. Calling `store.model.down()` or `store.model.up()` will automatically invoke all subscriptions created by `store.subscribe` calls.
 
@@ -101,9 +108,36 @@ const store = createStore({
   set(data) {
     return data;
   }
-  // ^^^ why not use the built-in `store.set` instead of `store.model.set`? 🦀
 });
+// In this case, `store.set` will do the same thing as `store.model.set`
 ```
+
+Merging can be customized to fit your application's needs.
+
+<details>
+  <summary>Custom merge</summary>
+  <p>
+    Pass a merge function as an option when creating your store:
+
+```js
+const store = createStore(model, {
+  merge(target, source, createProxyFunction) {
+    for (let key in source) {
+      if (typeof source[key] === 'function') {
+        // Proxy functions so they automatically resolve promises and update state
+        target[key] = createProxyFunction(source[key], target);
+      }
+      else {
+        target[key] = source[key]; // Yay, shallow merge! 🎉
+      }
+    }
+    return target;
+  }
+});
+// You're never happy with what you get for free, are you? 😞
+```
+  </p>
+</details>
 
 ### Asynchronous Functions
 Promises are supported out of the box - subscriptions are called after the promise resolves, so async programming is as simple as it can be:
@@ -133,7 +167,12 @@ export const ABCounterModel = {
 This allows you to build the data tree of your dreams! 🌳🦄
 
 ### Lazy Loading
-So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import) or put some values and functions in the model at some later point? I got you covered:
+So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import), or put some values and functions in the model at some later point and have the functions automatically update data when called? Here are a couple of ways to do it:
+
+<details>
+  <summary>Using the store directly</summary>
+  <p>
+
 ```js
 const store = createStore();
 
@@ -147,9 +186,52 @@ import('./yet-another-model').then((exports) => store.set({ C: exports.default }
 import('./utils-model').then((exports) => store.set({ utils: exports }));
 ```
 
-When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically be able to update the data and invoke all subscriptions when called.
+    When the `import` promise resolves, the model's functions proxied from `CounterModel` will automatically be able to update the data and invoke all subscriptions when called.
+  </p>
+</details>
 
-<details><summary>Here's another approach with a function that you can use inside models without accessing the `store` directly</summary><p>
+<details>
+  <summary>Using a function in the model</summary>
+
+  <p>
+    You shouldn't have to (and can't always) rely on the store being available. Encapsulating your models makes them decoupled from 3rd party libraries, which means they're easier to maintain and adaptable to flexible requirements.
+
+    So to lazy load data without touching the store, you can do this:
+
+```js
+export const LazyLoadedModel = {
+  set(data) {
+    return data;
+  },
+  loadChildModels() {
+    // Get a named export
+    import('./counter-model').then((exports) => this.set({ counter: exports.CounterModel }));
+    // Get multiple named exports
+    import('./another-model').then((exports) => this.set({ A: exports.ModelA, B: exports.ModelB }));
+    // Get default export
+    import('./yet-another-model').then((exports) => this.set({ C: exports.default }));
+    // Get all exports
+    import('./utils-model').then((exports) => this.set({ utils: exports }));
+  }
+};
+```
+
+    Then define your store and load the models:
+
+```js
+const store = createStore({ lazy: LazyLoadedModel });
+loadmodel.lazy.loadChildModels();
+```
+
+    The child models will be inserted into the model's data when the import is done.
+  </p>
+</details>
+
+<details>
+  <summary>Using a utility function</summary>
+
+  <p>
+    Defining a set function and messing with promises can get a little repetitive, so here's a utility function instead:
 
 ```js
 export async function importModel(moduleName, properties) {
@@ -166,23 +248,27 @@ export async function importModel(moduleName, properties) {
     exports[key] = moduleExports[properties[key]];
     return exports;
   }, {});
-};
+}
 ```
 
-</p></details>
+Then when defining your model:
 
 ```js
-const store = createStore(ImportModel);
-
-// Get a named export
-store.model.import('./counter-model', { counter: 'CounterModel' });
-// Get multiple named exports
-store.model.import('./another-model', { A: 'ModelA', B: 'ModelB' });
-// Get default export
-store.model.import('./yet-another-model', { C: 'default' });
-// Get all exports
-store.model.import('./utils-model', 'utils');
+export const LazyLoadedModel = {
+  import: importModel,
+  loadChildModels() {
+    // Get a named export
+    this.import('./counter-model', { counter: 'CounterModel' });
+    // Get multiple named exports
+    this.import('./another-model', { A: 'ModelA', B: 'ModelB' });
+    // Get default export
+    this.import('./yet-another-model', { C: 'default' });
+    // Get all exports
+    this.import('./utils-model', 'utils');
+  }
 ```
+  </p>
+</details>
 
 ### TypeScript
 Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
@@ -233,8 +319,6 @@ Be careful with those if you're using `this` inside your model functions - as ex
 You can render the model in endless shapes most beautiful 💅
 For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
-<!-- TODO: Make collapsible and / or side by side table without JSX -->
-
 You probably want to put your data on a piece of glowing glass and become a gazillionaire overnight, right? Well, we all know the best way to do that is to write a counter app. Here's an example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
@@ -258,30 +342,9 @@ const store = app({
 // You're welcome. Remember I helped you get rich 💰
 ```
 
-The `app` function is a very thin layer on top of Derpy to reduce boilerplate if you use [picodom](https://github.com/picodom/picodom) or a similar library. It also adds a custom `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will work just the same.
+The `app` function is a very thin layer on top of Derpy to reduce boilerplate. It also adds a custom `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will work just the same.
 
 Calling `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`. Look at you, smartypants! 🦉
-
-### Custom Merge
-<!-- TODO: Make collapsible -->
-If you need more control over how data gets merged, use your own merge function:
-```js
-const store = createStore(model, {
-  merge(target, source, createProxyFunction) {
-    for (let key in source) {
-      if (typeof source[key] === 'function') {
-        // Proxy functions so they automatically resolve promises and update state
-        target[key] = createProxyFunction(source[key], target);
-      }
-      else {
-        target[key] = source[key]; // Yay, shallow merge! 🎉
-      }
-    }
-    return target;
-  }
-});
-// You're never happy with what you get for free, are you? 😞
-```
 
 ## FAQs
 ### So this is cool, where can I find out more?

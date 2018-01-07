@@ -21,7 +21,7 @@ export interface StoreListener<T extends {}> {
 
 // TODO: Explore using `Object.defineProperty` instead of proxy functions
 /**
- * Create a store from a source object, deep copying all values
+ * Creates a store from a source object, deep copying all values
  * and proxying all functions to call subscriptions when executed.
  */
 export const createStore: CreateStore = (source, options) => {
