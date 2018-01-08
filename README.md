@@ -12,7 +12,7 @@ A silly little state manager 😋
 - [Counter](#counter)
 - [API Reference](#api-reference)
 - [Features](#features)
-    - [Deep Merge](#deep-merge)
+    - [Return Changes](#return-changes)
     - [Asynchronous Functions](#asynchronous-functions)
     - [Composition](#composition)
     - [Lazy Loading](#lazy-loading)
@@ -75,6 +75,29 @@ Can optionally receive a second argument to customize behavior:
 const store = createStore(model, { merge: customMergeFunction });
 ```
 
+<details>
+  <summary>Example of custom merge</summary>
+  <p>This function performs a shallow merge instead of the default deep merge:
+
+```js
+const store = createStore(model, {
+  merge(target, source, createProxyFunction) {
+    for (let key in source) {
+      if (typeof source[key] === 'function') {
+        // Proxy functions so they automatically resolve promises and update state
+        target[key] = createProxyFunction(source[key], target);
+      }
+      else {
+        target[key] = source[key]; // Yay, shallow merge! 🎉
+      }
+    }
+    return target;
+  }
+});
+```
+  </p>
+</details>
+
 ### `store.model`
 An object composed of all values and proxied functions passed to `createStore`.
 
@@ -105,44 +128,31 @@ Tread lightly when rendering in subscriptions - they're not throttled or rate-li
 Calls all subscriptions manually. You usually only do this once after creating the store.
 
 ## Features
-### Deep Merge
-Whatever you return from your functions is *deeply merged* into the current data, preventing you from inadvertently changing data you didn't mean to. For example:
+### Return Changes
+A wise man once said:
+
+> **Return** the change that you wish to see in the world.
+
+When you call a function that returns (or resolves to) an object, the data is *deeply merged* into the current model:
 ```js
-const store = createStore({ a: { aa: 1, bb: 2 }, b: { aa: 3, bb: 4 } });
-store.set({                 a: { aa: 5        }, b: { aa: 6        } });
-// The model data is now ({ a: { aa: 5, bb: 2 }, b: { aa: 6, bb: 4 } });
+const store =
+    createStore({ a: 1, b: { c: 2, d: 3 }, set: (data) => data });
+store.model.set({       b: {       d: 4 },                      setA: (value) => ({ a: value }) });
+// New model:  ({ a: 1, b: { c: 2, d: 4 }, set: (data) => data, setA: (value) => ({ a: value }) });
 ```
 
-<details>
-  <summary>Custom merge</summary>
-  <p>Merging can be customized to fit your application's needs. Pass a merge function as an option when creating your store:
+In this case, `set` allows changing any property of the model, while `setA` only allows changing the `a` property.
 
-```js
-const store = createStore(model, {
-  merge(target, source, createProxyFunction) {
-    for (let key in source) {
-      if (typeof source[key] === 'function') {
-        // Proxy functions so they automatically resolve promises and update state
-        target[key] = createProxyFunction(source[key], target);
-      }
-      else {
-        target[key] = source[key]; // Yay, shallow merge! 🎉
-      }
-    }
-    return target;
-  }
-});
-// You're never happy with what you get for free, are you? 😞
-```
-  </p>
-</details>
+Functions are proxied to automatically call `store.update` if they return (or resolve to) an object when executed.
+
+So if you call `store.model.setA(5)`, it will call `store.update` afterwards as well.
 
 ### Asynchronous Functions
 Promises are supported out of the box - `update` is called after the promise resolves:
 ```js
 export const CounterModel = {
   count: 0,
-  async down() { // sweet async/await goodness 🍰
+  async down() { // sweet async / await goodness 🍰
     const value = await Promise.resolve(-1); // Get the value from some remote server
     return { count: this.count + value });
   },
