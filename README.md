@@ -136,7 +136,7 @@ A wise man once said:
 When you call a function that returns (or resolves to) an object, the data is **deeply merged** into the current model:
 ```js
 const store =
-    createStore({ a: 1, b: { c: 2, d: 3 }, set: (data) => data });
+    createStore({ a: 1, b: { c: 2, d: 3 }, set: (data) => data                                  });
 store.model.set({       b: {       d: 4 },                      setA: (value) => ({ a: value }) });
 // New model:  ({ a: 1, b: { c: 2, d: 4 }, set: (data) => data, setA: (value) => ({ a: value }) });
 ```
