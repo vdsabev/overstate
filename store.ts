@@ -1,6 +1,10 @@
 import { RecursivePartial, isPromise, merge, Merge } from './utils';
 
 export interface CreateStore {
+  /**
+   * Creates a store from a source object, deep copying all values and
+   * proxying all functions to call `update` when executed.
+   */
   <T extends {}>(source?: T, options?: Partial<StoreOptions>): Store<T>;
 }
 
@@ -9,9 +13,16 @@ export interface StoreOptions {
 }
 
 export interface Store<T extends {}> {
+  /** An object composed of all values and proxied functions passed to `createStore` */
   readonly model: Readonly<T>;
+  /** Merges some data into the store model at the root level and calls `update` */
   set(data: RecursivePartial<T>): RecursivePartial<T>;
+  /**
+   * Calls the passed callback function every time a model function that returns
+   * (or resolves to) an object is executed
+   */
   subscribe(listener: StoreListener<T>): () => void;
+  /** Calls all subscriptions manually */
   update(): void;
 }
 
@@ -20,10 +31,6 @@ export interface StoreListener<T extends {}> {
 }
 
 // TODO: Explore using `Object.defineProperty` instead of proxy functions
-/**
- * Create a store from a source object, deep copying all values
- * and proxying all functions to call subscriptions when executed.
- */
 export const createStore: CreateStore = (source, options) => {
   const model: typeof source = {} as any;
   const listeners: StoreListener<typeof source>[] = [];
