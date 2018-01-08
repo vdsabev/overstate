@@ -133,7 +133,7 @@ A wise man once said:
 
 > **Return** the change that you wish to see in the world.
 
-When you call a function that returns (or resolves to) an object, the data is *deeply merged* into the current model:
+When you call a function that returns (or resolves to) an object, the data is **deeply merged** into the current model:
 ```js
 const store =
     createStore({ a: 1, b: { c: 2, d: 3 }, set: (data) => data });
