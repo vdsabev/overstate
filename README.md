@@ -68,7 +68,7 @@ setInterval(store.model.up, 1000);
 
 ## API Reference
 ### `createStore`
-Creates a store from a source object, deep copying all values and proxying all functions to call `update` when executed.
+Creates a store from a source object, deep copying all values and proxying all functions to call `store.update` when executed.
 
 Can optionally receive a second argument to customize behavior:
 ```js
@@ -104,7 +104,7 @@ An object composed of all values and proxied functions passed to `createStore`.
 To call suscriptions when proxied, model functions should return (or resolve to) an object.
 
 ### `store.set`
-Merges some data into the store model at the root level and calls `update`.
+Merges some data into the store model at the root level and calls `store.update`.
 
 It's a built-in shortcut for this:
 ```js
@@ -148,7 +148,7 @@ Functions are proxied to automatically call `store.update` if they return (or re
 So if you call `store.model.setA(5)`, it will call `store.update` afterwards as well.
 
 ### Asynchronous Functions
-Promises are supported out of the box - `update` is called after the promise resolves:
+Promises are supported out of the box - `store.update` is called after the promise resolves:
 ```js
 export const CounterModel = {
   count: 0,
@@ -171,10 +171,10 @@ export const ABCounterModel = {
 };
 ```
 
-This allows you to build the data tree of your dreams! 🌳🦄
+This allows you to build a hierarchical tree of data and functions.
 
 ### Lazy Loading
-So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import), or put some values and functions in the model at some later point and have the functions automatically update data when called?
+So you want to do [code splitting with webpack](https://webpack.js.org/api/module-methods/#import) and have functions from the imported modules automatically call `store.update` data when executed?
 
 Here are a few ways to do it:
 
@@ -279,7 +279,9 @@ export const LazyLoadedModel = {
 </details>
 
 ### TypeScript
-Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box when calling model functions:
+Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box.
+
+Going back to the [Counter](#counter) example:
 ```ts
 store.model.up(5); // [ts] Expected 0 arguments, but got 1.
 ```
@@ -351,11 +353,11 @@ It also adds a `store.destroy()` method to unsubscribe from rendering, effective
 `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`.
 
 ## FAQs
+### Wait, I want to run this library on a potato, how big is it?
+The [minified code](https://unpkg.com/derpy) is 1234 bytes, or 769 bytes gzipped.
+
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
 - Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/derpy/issues)
 - Browse the [CodePen collection](https://codepen.io/collection/DNdBBG)
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
-
-### Wait, I want to run this library on a potato, how big is it?
-The [minified code](https://unpkg.com/derpy) is 1234 bytes, or 769 bytes gzipped.
