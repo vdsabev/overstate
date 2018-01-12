@@ -1,4 +1,4 @@
-import { RecursivePartial, isPromise, merge, Merge } from './utils';
+import { RecursivePartial, isObject, isPromise, merge, Merge } from './utils';
 
 export interface CreateStore {
   /**
@@ -43,10 +43,12 @@ export const createStore: CreateStore = (source, options) => {
     options.merge = merge;
   }
 
-  const set = (data: RecursivePartial<typeof source>) => {
-    const result = options.merge(model, data, createProxyFunction);
-    update();
-    return result;
+  const createSet = <U extends {}>(slice: U) => (data: RecursivePartial<U>) => {
+    if (isObject(data)) {
+      options.merge(slice, data, createProxyFunction);
+      update();
+    }
+    return data;
   }
 
   const subscribe = (listener: StoreListener<typeof source>) => {
@@ -62,18 +64,17 @@ export const createStore: CreateStore = (source, options) => {
   const update = () => listeners.forEach((subscription) => subscription(model));
 
   const createProxyFunction = <U extends {}>(fn: Function, slice: U) => (...args: any[]) => {
+    const set = createSet(slice);
     const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(slice, args);
 
     if (isPromise(changes)) {
-      return changes.then((asyncChanges) => {
-        options.merge(slice, asyncChanges, createProxyFunction);
-        update();
-        return asyncChanges;
-      });
+      return changes.then(set);
     }
 
-    options.merge(slice, changes, createProxyFunction);
-    update();
+    if (isObject(changes)) {
+      return set(changes);
+    }
+
     return changes;
   };
 
@@ -82,7 +83,7 @@ export const createStore: CreateStore = (source, options) => {
   return {
     model,
     subscribe,
-    set,
+    set: createSet(model),
     update
   };
 };

@@ -84,10 +84,26 @@ describe(`createStore`, () => {
       expect(store.model.a).not.toBe(a);
     });
 
-    it(`should return correct value from function`, () => {
+    it(`should return an object`, () => {
       const value = { b: 2, c: 3 };
       const store = createStore({ a: () => value });
       expect(store.model.a()).toBe(value);
+    });
+
+    it(`should return a number`, () => {
+      const store = createStore({ a: () => 1 });
+      expect(store.model.a()).toBe(1);
+    });
+
+    it(`should return a string`, () => {
+      const store = createStore({ a: () => 'a' });
+      expect(store.model.a()).toBe('a');
+    });
+
+    it(`should return an array`, () => {
+      const array = [1, 2, 3];
+      const store = createStore({ a: () => array });
+      expect(store.model.a()).toBe(array);
     });
 
     it(`should update state from function`, () => {
@@ -387,6 +403,22 @@ describe(`createStore`, () => {
       store.subscribe(listener);
       store.update();
       expect(listener).toHaveBeenCalledWith({});
+    });
+
+    it(`should not call listeners if result is undefined`, () => {
+      const listener = jest.fn();
+      const store = createStore({ a: () => {} });
+      store.subscribe(listener);
+      store.model.a();
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it(`should not call listeners if result is number`, () => {
+      const listener = jest.fn();
+      const store = createStore({ a: () => 1 });
+      store.subscribe(listener);
+      store.model.a();
+      expect(listener).not.toHaveBeenCalled();
     });
 
     it(`should unsubscribe`, () => {

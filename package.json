@@ -1,5 +1,5 @@
 {
-  "version": "0.6.5",
+  "version": "0.6.6",
   "name": "derpy",
   "description": "A silly little state manager 😋",
   "keywords": [
@@ -43,6 +43,7 @@
       "!node_modules/**",
       "!**/*.d.ts",
       "!**/*.test.ts",
+      "!index.ts",
       "**/*.ts"
     ],
     "moduleFileExtensions": [
