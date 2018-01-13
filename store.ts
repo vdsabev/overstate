@@ -16,14 +16,22 @@ export interface Store<T extends {}> {
   /** An object composed of all values and proxied functions passed to `createStore` */
   readonly model: Readonly<T>;
   /** Merges some data into the store model at the root level and calls `update` */
-  set(data: RecursivePartial<T>): RecursivePartial<T>;
+  set: StoreSet<T>;
   /**
    * Calls the passed callback function every time a model function that returns
    * (or resolves to) an object is executed
    */
-  subscribe(listener: StoreListener<T>): () => void;
+  subscribe: StoreSubscribe<T>;
   /** Calls all subscriptions manually */
   update(): void;
+}
+
+export interface StoreSet<T extends {}> {
+  (data: RecursivePartial<T>): RecursivePartial<T>;
+}
+
+export interface StoreSubscribe<T extends {}> {
+  (listener: StoreListener<T>): () => void;
 }
 
 export interface StoreListener<T extends {}> {
@@ -43,7 +51,7 @@ export const createStore: CreateStore = (source, options) => {
     options.merge = merge;
   }
 
-  const createSet = <U extends {}>(slice: U) => (data: RecursivePartial<U>) => {
+  const createSet = <U extends {}>(slice: U): StoreSet<U> => (data) => {
     if (isObject(data)) {
       options.merge(slice, data, createProxyFunction);
       update();
@@ -51,7 +59,7 @@ export const createStore: CreateStore = (source, options) => {
     return data;
   }
 
-  const subscribe = (listener: StoreListener<typeof source>) => {
+  const subscribe: StoreSubscribe<typeof source> = (listener) => {
     listeners.push(listener);
     return () => {
       const indexOfListener = listeners.indexOf(listener);
