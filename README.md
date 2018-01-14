@@ -235,49 +235,6 @@ The child models will be inserted into the model's data when the import is done.
   </p>
 </details>
 
-<details>
-  <summary>Using a utility function</summary>
-
-  <p>Defining a set function and messing with promises can get a little repetitive, so here's a utility function instead:
-
-```js
-export async function importModel(moduleName, properties) {
-  const moduleExports = await import(moduleName);
-
-  // Set all exports directly into the model, not in a subproperty
-  if (!properties) return moduleExports;
-
-  // All exports
-  if (typeof properties === 'string') return { [properties]: moduleExports };
-
-  // Some named exports (including default)
-  return Object.keys(properties).reduce((exports, key) => {
-    exports[key] = moduleExports[properties[key]];
-    return exports;
-  }, {});
-}
-```
-
-Then when defining your model:
-
-```js
-export const LazyLoadedModel = {
-  import: importModel,
-  loadChildModels() {
-    // Get a named export
-    this.import('./counter-model', { counter: 'CounterModel' });
-    // Get multiple named exports
-    this.import('./another-model', { A: 'ModelA', B: 'ModelB' });
-    // Get default export
-    this.import('./yet-another-model', { C: 'default' });
-    // Get all exports
-    this.import('./utils-model', 'utils');
-  }
-};
-```
-  </p>
-</details>
-
 ### TypeScript
 Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box.
 
