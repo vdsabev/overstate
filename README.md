@@ -311,7 +311,7 @@ It also adds a `store.destroy()` method to unsubscribe from rendering, effective
 
 ## FAQs
 ### Wait, I want to run this library on a potato, how big is it?
-The [minified code](https://unpkg.com/derpy) is 1237 bytes, or 781 bytes gzipped.
+The [minified code](https://unpkg.com/derpy) is 1234 bytes, or 780 bytes gzipped.
 
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:

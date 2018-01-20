@@ -23,11 +23,11 @@ export interface Store<T extends {}> {
    */
   subscribe: StoreSubscribe<T>;
   /** Calls all subscriptions manually */
-  update(): void;
+  update<U extends {}>(changes?: U): void;
 }
 
 export interface StoreSet<T extends {}> {
-  (data: RecursivePartial<T>): RecursivePartial<T>;
+  (changes: RecursivePartial<T>): RecursivePartial<T>;
 }
 
 export interface StoreSubscribe<T extends {}> {
@@ -35,13 +35,17 @@ export interface StoreSubscribe<T extends {}> {
 }
 
 export interface StoreListener<T extends {}> {
-  (model: T): void;
+  <U extends {}>(model: T, changes: U): void;
 }
 
-// TODO: Explore using `Object.defineProperty` instead of proxy functions
+export interface StoreUpdate {
+  <U extends {}>(changes: U): void;
+}
+
 export const createStore: CreateStore = (source, options) => {
-  const model: typeof source = {} as any;
-  const listeners: StoreListener<typeof source>[] = [];
+  type T = typeof source;
+  const model: T = {} as any;
+  const listeners: StoreListener<T>[] = [];
 
   if (!options) {
     options = {};
@@ -51,15 +55,15 @@ export const createStore: CreateStore = (source, options) => {
     options.merge = merge;
   }
 
-  const createSet = <U extends {}>(slice: U): StoreSet<U> => (data) => {
-    if (isObject(data)) {
-      options.merge(slice, data, createProxyFunction);
-      update();
+  const createSet = <U extends {}>(slice: U): StoreSet<U> => (changes) => {
+    if (isObject(changes)) {
+      options.merge(slice, changes, createProxyFunction);
+      update(changes);
     }
-    return data;
-  }
+    return changes;
+  };
 
-  const subscribe: StoreSubscribe<typeof source> = (listener) => {
+  const subscribe: StoreSubscribe<T> = (listener) => {
     listeners.push(listener);
     return () => {
       const indexOfListener = listeners.indexOf(listener);
@@ -69,7 +73,9 @@ export const createStore: CreateStore = (source, options) => {
     };
   };
 
-  const update = () => listeners.forEach((subscription) => subscription(model));
+  const update: StoreUpdate = (changes) => {
+    listeners.forEach((subscription) => subscription(model, changes));
+  };
 
   const createProxyFunction = <U extends {}>(fn: Function, slice: U) => (...args: any[]) => {
     const set = createSet(slice);
@@ -92,6 +98,6 @@ export const createStore: CreateStore = (source, options) => {
     model,
     subscribe,
     set: createSet(model),
-    update
+    update,
   };
 };

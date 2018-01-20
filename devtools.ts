@@ -1,4 +1,4 @@
-import { RecursivePartial, Store } from './index';
+import { Store } from './index';
 
 interface Window {
   top: Window;
@@ -18,6 +18,11 @@ interface DevToolsMessage {
     type: string;
   };
 }
+
+const maxChangesLength = 64;
+
+const trim = (text: string, maxLength: number, ellipsis = '…') =>
+  text && text.length > maxLength ? text.slice(0, maxLength) + ellipsis : text;
 
 /**
  * Inspired by unistore devtools
@@ -46,9 +51,9 @@ export const devtools = <T extends {}>(store: DevToolsStore<T>) => {
 
     store.devtools.init(store.model);
 
-    store.subscribe((state: T) => {
+    store.subscribe((model, changes) => {
       if (!ignoreState) {
-        store.devtools.send('set', state);
+        store.devtools.send(changes ? trim(JSON.stringify(changes), maxChangesLength) : 'set', model);
       }
     });
   }
