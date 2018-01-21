@@ -1,14 +1,22 @@
-import { Store } from './index';
+import { Store } from '../store';
 
 interface Window {
   top: Window;
-  __REDUX_DEVTOOLS_EXTENSION__?: any;
+  __REDUX_DEVTOOLS_EXTENSION__: {
+    connect: <T extends {}>() => DevTools<T>;
+  };
 }
 
 declare const window: Window;
 
-export interface DevToolsStore<T extends {}> extends Store<T> {
-  devtools?: any;
+interface DevToolsStore<T extends {}> extends Store<T> {
+  devtools?: DevTools<T>;
+}
+
+interface DevTools<T extends {}> {
+  subscribe(listener: (message: DevToolsMessage) => void): void;
+  init(model: T): void;
+  send(actionName: string, model: T): void;
 }
 
 interface DevToolsMessage {
@@ -28,7 +36,7 @@ const trim = (text: string, maxLength: number, ellipsis = '…') =>
  * Inspired by unistore devtools
  * @see https://github.com/developit/unistore/blob/8a5c17ba2e58b4848d9dceb695507c2da4607ff3/devtools.js
  */
-export const devtools = <T extends {}>(store: DevToolsStore<T>) => {
+export const debug = <T extends {}>(store: DevToolsStore<T>) => {
   const extension = window.__REDUX_DEVTOOLS_EXTENSION__ || window.top.__REDUX_DEVTOOLS_EXTENSION__;
   let ignoreState = false;
 
@@ -42,7 +50,7 @@ export const devtools = <T extends {}>(store: DevToolsStore<T>) => {
   if (!store.devtools) {
     store.devtools = extension.connect();
 
-    store.devtools.subscribe((message: DevToolsMessage) => {
+    store.devtools.subscribe((message) => {
       if (message.type === 'DISPATCH' && message.state) {
         ignoreState = message.payload.type === 'JUMP_TO_ACTION' || message.payload.type === 'JUMP_TO_STATE';
         store.set(JSON.parse(message.state));

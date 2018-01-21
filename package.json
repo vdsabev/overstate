@@ -40,6 +40,7 @@
     "collectCoverage": true,
     "collectCoverageFrom": [
       "!benchmarks/**",
+      "!debug/**",
       "!node_modules/**",
       "!**/*.d.ts",
       "!**/*.test.ts",
