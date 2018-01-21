@@ -56,10 +56,8 @@ export const createStore: CreateStore = (source, options) => {
   }
 
   const createSet = <U extends {}>(slice: U): StoreSet<U> => (changes) => {
-    if (isObject(changes)) {
-      options.merge(slice, changes, createProxyFunction);
-      update(changes);
-    }
+    options.merge(slice, changes, createProxyFunction);
+    update(changes);
     return changes;
   };
 

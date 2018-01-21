@@ -1,4 +1,4 @@
-import { createStore } from './index';
+import { createStore } from './store';
 
 describe(`createStore`, () => {
   describe(`options`, () => {
@@ -25,7 +25,7 @@ describe(`createStore`, () => {
         state: {},
         setState(state) {
           return { state };
-        }
+        },
       };
 
       const store = createStore(model, {
@@ -33,13 +33,12 @@ describe(`createStore`, () => {
           for (let key in source) {
             if (typeof source[key] === 'function') {
               target[key] = createProxyFunction(source[key], target);
-            }
-            else {
+            } else {
               target[key] = source[key];
             }
           }
           return target;
-        }
+        },
       });
 
       store.model.setState({ a: 1 });
@@ -114,7 +113,7 @@ describe(`createStore`, () => {
         },
         up() {
           return { count: this.count + 1 };
-        }
+        },
       };
       const store = createStore(model);
       expect(store.model.down()).toEqual({ count: -1 });
@@ -130,7 +129,7 @@ describe(`createStore`, () => {
         count: 0,
         add(count: number) {
           return { count: this.count + count };
-        }
+        },
       };
       const store = createStore(model);
       store.model.add(10);
@@ -151,7 +150,7 @@ describe(`createStore`, () => {
         add3() {
           this.add1();
           this.add2();
-        }
+        },
       };
       const store = createStore(model);
       store.model.add3();
@@ -163,7 +162,7 @@ describe(`createStore`, () => {
         count: 0,
         up() {
           return { count: this.count + 1 };
-        }
+        },
       };
       const store = createStore(model);
       store.model.up();
@@ -176,7 +175,7 @@ describe(`createStore`, () => {
         count: 0,
         add(count: number) {
           this.count += count;
-        }
+        },
       };
       const store = createStore(model);
       store.model.add(10);
@@ -214,14 +213,14 @@ describe(`createStore`, () => {
         name: 'a',
         rename(name: string) {
           return { name };
-        }
+        },
       },
       counter: {
         count: 0,
         add(count: number) {
           return { count: this.count + count };
-        }
-      }
+        },
+      },
     };
 
     it(`should initialize deep values`, () => {
@@ -282,7 +281,7 @@ describe(`createStore`, () => {
 
     const model = {
       baseCounter: new BaseCounter(),
-      extendedCounter: new ExtendedCounter()
+      extendedCounter: new ExtendedCounter(),
     };
 
     it(`should contain values`, () => {
@@ -307,7 +306,7 @@ describe(`createStore`, () => {
         count: 0,
         add(count: number) {
           return Promise.resolve({ count: this.count + count });
-        }
+        },
       };
       const store = createStore(model);
       expect(await store.model.add(10)).toEqual({ count: 10 });
@@ -318,14 +317,13 @@ describe(`createStore`, () => {
         count: 0,
         add(count: number) {
           return Promise.reject(`Error`);
-        }
+        },
       };
       const store = createStore(model);
       try {
         await store.model.add(10);
         throw `Not an error`;
-      }
-      catch (error) {
+      } catch (error) {
         expect(error).toBe(`Error`);
       }
     });
@@ -338,25 +336,25 @@ describe(`createStore`, () => {
     }
 
     interface CounterModelSync extends CounterModel {
-      set(state:Partial<CounterModel>): Partial<CounterModel>;
+      set(state: Partial<CounterModel>): Partial<CounterModel>;
     }
 
     const counterModelSync: CounterModelSync = {
       count: 0,
       set(state) {
         return state;
-      }
+      },
     };
 
     interface CounterModelAsync extends CounterModel {
-      set(state:Partial<CounterModel>): Promise<Partial<CounterModel>>;
+      set(state: Partial<CounterModel>): Promise<Partial<CounterModel>>;
     }
 
     const counterModelAsync: CounterModelAsync = {
       count: 0,
       async set(state) {
         return state;
-      }
+      },
     };
 
     it(`should add function from object`, () => {
@@ -364,7 +362,7 @@ describe(`createStore`, () => {
       store.model.set({
         add(count: number) {
           return { count: this.count + count };
-        }
+        },
       });
       store.model.add(10);
       expect(store.model.count).toBe(10);
@@ -389,7 +387,7 @@ describe(`createStore`, () => {
       await store.model.set({
         add(count: number) {
           return { count: this.count + count };
-        }
+        },
       });
       store.model.add(10);
       expect(store.model.count).toBe(10);
@@ -398,11 +396,13 @@ describe(`createStore`, () => {
 
   describe(`subscribe`, () => {
     it(`should call listener on update`, () => {
-      const store = createStore({});
+      const model = { a: 1, b: 2 };
+      const changes = { b: 3 };
+      const store = createStore(model);
       const listener = jest.fn();
       store.subscribe(listener);
-      store.update();
-      expect(listener).toHaveBeenCalledWith({});
+      store.set(changes);
+      expect(listener).toHaveBeenCalledWith({ ...model, ...changes }, changes);
     });
 
     it(`should not call listeners if result is undefined`, () => {

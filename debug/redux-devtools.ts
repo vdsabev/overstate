@@ -9,17 +9,17 @@ interface Window {
 
 declare const window: Window;
 
-interface DevToolsStore<T extends {}> extends Store<T> {
+export interface DevToolsStore<T extends {}> extends Store<T> {
   devtools?: DevTools<T>;
 }
 
-interface DevTools<T extends {}> {
+export interface DevTools<T extends {}> {
   subscribe(listener: (message: DevToolsMessage) => void): void;
   init(model: T): void;
   send(actionName: string, model: T): void;
 }
 
-interface DevToolsMessage {
+export interface DevToolsMessage {
   type: string;
   state: string;
   payload: {
