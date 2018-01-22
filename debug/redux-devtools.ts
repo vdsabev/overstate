@@ -1,4 +1,5 @@
 import { Store } from '../store';
+import { isObject, getAllProps } from '../utils';
 
 interface Window {
   top: Window;
@@ -27,11 +28,6 @@ export interface DevToolsMessage {
   };
 }
 
-const maxChangesLength = 64;
-
-const trim = (text: string, maxLength: number, ellipsis = '…') =>
-  text && text.length > maxLength ? text.slice(0, maxLength) + ellipsis : text;
-
 /**
  * Inspired by unistore devtools
  * @see https://github.com/developit/unistore/blob/8a5c17ba2e58b4848d9dceb695507c2da4607ff3/devtools.js
@@ -59,12 +55,31 @@ export const debug = <T extends {}>(store: DevToolsStore<T>) => {
 
     store.devtools.init(store.model);
 
-    store.subscribe((model, changes) => {
+    store.subscribe((model, changes, action) => {
       if (!ignoreState) {
-        store.devtools.send(changes ? trim(JSON.stringify(changes), maxChangesLength) : 'set', model);
+        const path = getPathToValue(model, action, 'model');
+        store.devtools.send(path || 'set', model);
       }
     });
   }
 
   return store;
+};
+
+const getPathToValue = <S extends {}>(obj: S, value: Function, prefix: string): string => {
+  const keys = getAllProps(obj);
+  for (const key of keys) {
+    const objValue = (obj as any)[key];
+    if (objValue === value) {
+      return `${prefix}.${key}`;
+    }
+    if (isObject(objValue)) {
+      const path = getPathToValue(objValue, value, `${prefix}.${key}`);
+      if (path && path !== prefix) {
+        return path;
+      }
+    }
+  }
+
+  return null;
 };

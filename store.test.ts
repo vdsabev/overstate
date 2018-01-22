@@ -402,7 +402,23 @@ describe(`createStore`, () => {
       const listener = jest.fn();
       store.subscribe(listener);
       store.set(changes);
-      expect(listener).toHaveBeenCalledWith({ ...model, ...changes }, changes);
+      expect(listener).toHaveBeenCalledWith({ ...model, ...changes }, changes, undefined);
+    });
+
+    it(`should call listener with action`, () => {
+      const store = createStore({ a: 1, set: (a) => ({ a }) });
+      const listener = jest.fn();
+      store.subscribe(listener);
+      store.model.set(2);
+      expect(listener.mock.calls[0][2]).toBe(store.model.set);
+    });
+
+    it(`should call listener with 'undefined' for 'update'`, () => {
+      const store = createStore({ a: 1 });
+      const listener = jest.fn();
+      store.subscribe(listener);
+      store.update();
+      expect(listener.mock.calls[0][2]).toBe(undefined);
     });
 
     it(`should not call listeners if result is undefined`, () => {

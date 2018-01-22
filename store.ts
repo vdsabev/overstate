@@ -23,7 +23,7 @@ export interface Store<T extends {}> {
    */
   subscribe: StoreSubscribe<T>;
   /** Calls all subscriptions manually */
-  update<U extends {}>(changes?: U): void;
+  update: StoreUpdate;
 }
 
 export interface StoreSet<T extends {}> {
@@ -35,11 +35,11 @@ export interface StoreSubscribe<T extends {}> {
 }
 
 export interface StoreListener<T extends {}> {
-  <U extends {}>(model: T, changes: U): void;
+  <U extends {}>(model: T, changes: U, action: Function): void;
 }
 
 export interface StoreUpdate {
-  <U extends {}>(changes: U): void;
+  <U extends {}>(changes?: U, action?: Function): void;
 }
 
 export const createStore: CreateStore = (source, options) => {
@@ -55,9 +55,9 @@ export const createStore: CreateStore = (source, options) => {
     options.merge = merge;
   }
 
-  const createSet = <U extends {}>(slice: U): StoreSet<U> => (changes) => {
+  const createSetFunction = <U extends {}>(slice: U, action?: Function): StoreSet<U> => (changes) => {
     options.merge(slice, changes, createProxyFunction);
-    update(changes);
+    update(changes, action);
     return changes;
   };
 
@@ -71,23 +71,28 @@ export const createStore: CreateStore = (source, options) => {
     };
   };
 
-  const update: StoreUpdate = (changes) => {
-    listeners.forEach((subscription) => subscription(model, changes));
+  const update: StoreUpdate = (changes, action) => {
+    listeners.forEach((subscription) => subscription(model, changes, action));
   };
 
-  const createProxyFunction = <U extends {}>(fn: Function, slice: U) => (...args: any[]) => {
-    const set = createSet(slice);
-    const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(slice, args);
+  const createProxyFunction = <U extends {}>(fn: Function, slice: U) => {
+    const proxiedFn = (...args: any[]) => {
+      const changes: RecursivePartial<U> | Promise<RecursivePartial<U>> = fn.apply(slice, args);
 
-    if (isPromise(changes)) {
-      return changes.then(set);
-    }
+      if (isPromise(changes)) {
+        return changes.then(set);
+      }
 
-    if (isObject(changes)) {
-      return set(changes);
-    }
+      if (isObject(changes)) {
+        return set(changes);
+      }
 
-    return changes;
+      return changes;
+    };
+
+    const set = createSetFunction(slice, proxiedFn);
+
+    return proxiedFn;
   };
 
   options.merge(model, source, createProxyFunction);
@@ -95,7 +100,7 @@ export const createStore: CreateStore = (source, options) => {
   return {
     model,
     subscribe,
-    set: createSet(model),
+    set: createSetFunction(model),
     update,
   };
 };
