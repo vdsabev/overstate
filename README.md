@@ -110,10 +110,8 @@ const store = createStore(model, {
 </details>
 
 <details>
-  <summary>Custom function calls</summary>
-  <p>
-    <a name="custom-function-calls"></a>
-    If you prefer using another format for your functions like (state, ...args):
+  <summary>Custom function calls<a name="custom-function-calls"></a></summary>
+  <p>If you prefer using another format for your functions like (state, ...args):
 
 ```js
 const store = createStore({
