@@ -29,10 +29,10 @@ export interface DevToolsMessage {
 }
 
 /**
- * Inspired by unistore devtools
- * @see https://github.com/developit/unistore/blob/8a5c17ba2e58b4848d9dceb695507c2da4607ff3/devtools.js
+ * Heavily inspired by unistore devtools.
+ * @see https://github.com/developit/unistore/blob/2320a8a149ad10bf32901e55c4041eb712b7c3ed/devtools.js
  */
-export const debug = <T extends {}>(store: DevToolsStore<T>) => {
+export const debug = <T extends {}>(store: DevToolsStore<T>, options?: any) => {
   const extension = window.__REDUX_DEVTOOLS_EXTENSION__ || window.top.__REDUX_DEVTOOLS_EXTENSION__;
   let isDevtoolsAction = false;
 
@@ -44,7 +44,7 @@ export const debug = <T extends {}>(store: DevToolsStore<T>) => {
   }
 
   if (!store.devtools) {
-    store.devtools = extension.connect();
+    store.devtools = extension.connect(options);
 
     store.devtools.subscribe((message) => {
       if (message.type === 'DISPATCH' && message.state) {
