@@ -4,7 +4,7 @@ import { isObject, getAllProps } from '../utils';
 interface Window {
   top: Window;
   __REDUX_DEVTOOLS_EXTENSION__: {
-    connect: <T extends {}>() => DevTools<T>;
+    connect: <T extends {}>(options?: any) => DevTools<T>;
   };
 }
 
@@ -34,7 +34,7 @@ export interface DevToolsMessage {
  */
 export const debug = <T extends {}>(store: DevToolsStore<T>) => {
   const extension = window.__REDUX_DEVTOOLS_EXTENSION__ || window.top.__REDUX_DEVTOOLS_EXTENSION__;
-  let ignoreState = false;
+  let isDevtoolsAction = false;
 
   if (!extension) {
     console.warn('Please install/enable Redux devtools extension');
@@ -48,7 +48,7 @@ export const debug = <T extends {}>(store: DevToolsStore<T>) => {
 
     store.devtools.subscribe((message) => {
       if (message.type === 'DISPATCH' && message.state) {
-        ignoreState = message.payload.type === 'JUMP_TO_ACTION' || message.payload.type === 'JUMP_TO_STATE';
+        isDevtoolsAction = message.payload.type === 'JUMP_TO_ACTION' || message.payload.type === 'JUMP_TO_STATE';
         store.set(JSON.parse(message.state));
       }
     });
@@ -56,9 +56,11 @@ export const debug = <T extends {}>(store: DevToolsStore<T>) => {
     store.devtools.init(store.model);
 
     store.subscribe((model, changes, action) => {
-      if (!ignoreState) {
+      if (!isDevtoolsAction) {
         const path = getPathToValue(model, action, 'model');
         store.devtools.send(path || 'set', model);
+      } else {
+        isDevtoolsAction = false;
       }
     });
   }
