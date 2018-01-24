@@ -47,6 +47,41 @@ describe(`createStore`, () => {
       store.model.setState({ b: 2 });
       expect(store.model.state).toEqual({ b: 2 });
     });
+
+    it(`should allow custom function calls`, () => {
+      const down = (state) => ({ count: state.count - 1 });
+      const up = (state) => ({ count: state.count + 1 });
+      const callFunction = jest.fn((fn, slice, args) => fn(slice, ...args));
+      const store = createStore({ count: 0, down, up }, { callFunction });
+
+      (store.model as any).up();
+      expect(store.model.count).toBe(1);
+      expect(callFunction).toHaveBeenCalledWith(up, store.model, []);
+
+      (store.model as any).down();
+      expect(store.model.count).toBe(0);
+      expect(callFunction).toHaveBeenCalledWith(down, store.model, []);
+    });
+
+    it(`should pass arguments to custom function calls`, () => {
+      const add = (state, value) => ({ count: state.count + value });
+      const callFunction = jest.fn((fn, state, args) => fn(state, ...args));
+      const store = createStore({ count: 0, add }, { callFunction });
+
+      (store.model as any).add(5);
+      expect(store.model.count).toBe(5);
+      expect(callFunction).toHaveBeenCalledWith(add, store.model, [5]);
+    });
+
+    it(`should allow thunky custom function calls`, () => {
+      const add = (state) => (value) => ({ count: state.count + value });
+      const callFunction = jest.fn((fn, state, args) => fn(state)(...args));
+      const store = createStore({ count: 0, add }, { callFunction });
+
+      (store.model as any).add(5);
+      expect(store.model.count).toBe(5);
+      expect(callFunction).toHaveBeenCalledWith(add, store.model, [5]);
+    });
   });
 
   describe(`model`, () => {
