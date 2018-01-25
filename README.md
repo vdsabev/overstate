@@ -345,20 +345,21 @@ For examples with different view layers, see [the CodePen collection](https://co
 Here's a counter example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
+import { createStore } from 'derpy';
 import { app } from 'derpy/app/picodom';
 import { h, patch } from 'picodom';
 import { CounterModel } from './counter-model';
 
-const store = app({
-  patch,
-  model: CounterModel,
-  view: ({ model }) =>
-    <div>
-      Your count is: {model.count}
-      <button onclick={model.down}>-</button>
-      <button onclick={model.up}>+</button>
-    </div>
-});
+const store = createStore(CounterModel);
+const Counter = ({ model }) =>
+  <div>
+    Your count is: {model.count}
+    <button onclick={model.down}>-</button>
+    <button onclick={model.up}>+</button>
+  </div>
+;
+
+app({ store, view: Counter, patch });
 ```
 
 All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
