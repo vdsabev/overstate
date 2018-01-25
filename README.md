@@ -19,6 +19,7 @@ A silly little state manager 😋
     - [TypeScript](#typescript)
     - [Classes](#classes)
     - [Arrow Functions](#arrow-functions)
+    - [Debugging](#debugging)
     - [Rendering](#rendering)
 - [FAQs](#faqs)
 
@@ -326,6 +327,17 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 
 ### Arrow Functions
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Because functions are proxied when the store is created, class methods defined as arrow functions won't refer to the correct `this` either.
+
+### Debugging
+First, make sure you have the [Redux devtools extension](http://extension.remotedev.io) for your browser. Then:
+
+```js
+import { createStore } from 'derpy';
+import { debug } from 'derpy/debug/redux-devtools';
+import { CounterModel } from './counter-model';
+
+const store = process.env.NODE_ENV === 'production' ? createStore(CounterModel) : debug(createStore(CounterModel));
+```
 
 ### Rendering
 For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
