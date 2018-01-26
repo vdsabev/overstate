@@ -1,12 +1,12 @@
-export type RecursivePartial<T> = {
-  [P in keyof T]?: RecursivePartial<T[P]>;
-};
+export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
 
-const isFunction = (value: any): value is Function => typeof value === 'function';
+export const isFunction = (value: any): value is Function => typeof value === 'function';
 
-export const isObject = (value: any): value is Object => value !== null && typeof value === 'object' && !Array.isArray(value);
+export const isObject = (value: any): value is Object =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
 
-export const isPromise = <T>(promise: T | Promise<T>): promise is Promise<T> => promise != null && isFunction((promise as Promise<T>).then);
+export const isPromise = <T>(promise: T | Promise<T>): promise is Promise<T> =>
+  promise != null && isFunction((promise as Promise<T>).then);
 
 export interface Merge {
   <U extends Record<string, any>>(
@@ -30,7 +30,7 @@ export const merge: Merge = (target, source, createProxyFunction) => {
     getAllProps(source).forEach((key) => {
       // TypeError: 'caller', 'callee', and 'arguments' properties may not be accessed
       // on strict mode functions or the arguments objects for calls to them
-      if (isFunction(source) && key === 'caller' || key === 'callee' || key === 'arguments') return;
+      if ((isFunction(source) && key === 'caller') || key === 'callee' || key === 'arguments') return;
 
       const sourceValue = source[key];
       // We need to go deeper.jpg
@@ -39,12 +39,10 @@ export const merge: Merge = (target, source, createProxyFunction) => {
           target[key] = {};
         }
         merge(target[key], source[key], createProxyFunction);
-      }
-      else if (isFunction(sourceValue) && isFunction(createProxyFunction)) {
+      } else if (isFunction(sourceValue) && isFunction(createProxyFunction)) {
         target[key] = createProxyFunction(sourceValue, target);
-      }
-      // Set value
-      else {
+      } else {
+        // Set value
         target[key] = sourceValue;
       }
     });
@@ -57,16 +55,13 @@ export const merge: Merge = (target, source, createProxyFunction) => {
  * Gets all properties of an object, including inherited from prototype
  * @see https://stackoverflow.com/questions/30881632/es6-iterate-over-class-methods
  */
-export const getAllProps: AllProps = (x): string[] => (
-  x != null
-  &&
-  x !== Object.prototype
-  &&
-  [
-    ...Object.getOwnPropertyNames(x).filter(notConstructor),
-    ...getAllProps(Object.getPrototypeOf(x))
-  ]
-) || [];
+export const getAllProps: AllProps = (x): string[] =>
+  (x != null &&
+    x !== Object.prototype && [
+      ...Object.getOwnPropertyNames(x).filter(notConstructor),
+      ...getAllProps(Object.getPrototypeOf(x)),
+    ]) ||
+  [];
 
 const notConstructor = (key: string) => key !== 'constructor' && key !== 'prototype';
 

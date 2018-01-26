@@ -6,12 +6,6 @@
     "module": "es6",
     "lib": ["es6", "dom"]
   },
-  "exclude": [
-    "benchmarks",
-    "node_modules",
-    "**/*.test.ts"
-  ],
-  "include": [
-    "**/*.ts"
-  ]
+  "exclude": ["benchmarks", "examples", "node_modules", "**/*.test.ts"],
+  "include": ["**/*.ts"]
 }

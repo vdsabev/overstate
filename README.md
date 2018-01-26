@@ -19,6 +19,7 @@ A silly little state manager 😋
     - [TypeScript](#typescript)
     - [Classes](#classes)
     - [Arrow Functions](#arrow-functions)
+    - [Debugging](#debugging)
     - [Rendering](#rendering)
 - [FAQs](#faqs)
 
@@ -72,11 +73,22 @@ Creates a store from a source object, deep copying all values and proxying all f
 
 Can optionally receive a second argument to customize behavior:
 ```js
-const store = createStore(model, { merge: customMergeFunction });
+const store = createStore(model, {
+  merge(target, source, createProxyFunction) {
+    // Customize the way `source` is merged into `target`.
+    // Don't forget to call `createProxyFunction` on functions to make them update the state automatically!
+  },
+  callFunction(fn, state, args) {
+    // Customize the way functions are called.
+    // If you prefer not to use `this`, you can change the
+    // signature of your functions to `(state, ...args) => changes`
+    // or even `(state) => (...args) => changes`
+  }
+});
 ```
 
 <details>
-  <summary>Example of custom merge</summary>
+  <summary>Custom merge</summary>
   <p>This function performs a shallow merge instead of the default deep merge:
 
 ```js
@@ -95,6 +107,45 @@ const store = createStore(model, {
   }
 });
 ```
+  </p>
+</details>
+
+<a name="custom-function-calls"></a>
+<details>
+  <summary>Custom function calls</summary>
+  <p>If you prefer using another format for your functions like (state, ...args):
+
+```js
+const store = createStore({
+    count: 0,
+    down: (state) => ({ count: state.count - 1 }),
+    up: (state) => ({ count: state.count + 1 }),
+    add: (state, value) => ({ count: state.count + value })
+  }, {
+  callFunction: (fn, state, args) => fn(state, ...args)
+});
+```
+
+Or if you like (state) => (...args) more:
+```js
+const store = createStore({
+    count: 0,
+    down: (state) => () => ({ count: state.count - 1 }),
+    up: (state) => () => ({ count: state.count + 1 }),
+    add: (state) => (value) => ({ count: state.count + value })
+  }, {
+  callFunction: (fn, state, args) => fn(state)(...args)
+});
+```
+
+Then, you can still call your functions the same way you normally would:
+```js
+store.model.add(5); // store.model.count === 5
+store.model.up();   // store.model.count === 6
+store.model.down(); // store.model.count === 5
+```
+
+If you're using TypeScript, be aware that this will mess with the type definitions, because we're changing the function signature!
   </p>
 </details>
 
@@ -235,49 +286,6 @@ The child models will be inserted into the model's data when the import is done.
   </p>
 </details>
 
-<details>
-  <summary>Using a utility function</summary>
-
-  <p>Defining a set function and messing with promises can get a little repetitive, so here's a utility function instead:
-
-```js
-export async function importModel(moduleName, properties) {
-  const moduleExports = await import(moduleName);
-
-  // Set all exports directly into the model, not in a subproperty
-  if (!properties) return moduleExports;
-
-  // All exports
-  if (typeof properties === 'string') return { [properties]: moduleExports };
-
-  // Some named exports (including default)
-  return Object.keys(properties).reduce((exports, key) => {
-    exports[key] = moduleExports[properties[key]];
-    return exports;
-  }, {});
-}
-```
-
-Then when defining your model:
-
-```js
-export const LazyLoadedModel = {
-  import: importModel,
-  loadChildModels() {
-    // Get a named export
-    this.import('./counter-model', { counter: 'CounterModel' });
-    // Get multiple named exports
-    this.import('./another-model', { A: 'ModelA', B: 'ModelB' });
-    // Get default export
-    this.import('./yet-another-model', { C: 'default' });
-    // Get all exports
-    this.import('./utils-model', 'utils');
-  }
-};
-```
-  </p>
-</details>
-
 ### TypeScript
 Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box.
 
@@ -320,26 +328,38 @@ store.model.add('1'); // [ts] Argument of type '"1"' is not assignable to parame
 ### Arrow Functions
 Be careful with those if you're using `this` inside your model functions - as expected, it would refer to the parent context. Because functions are proxied when the store is created, class methods defined as arrow functions won't refer to the correct `this` either.
 
+### Debugging
+First, make sure you have the [Redux devtools extension](http://extension.remotedev.io) for your browser. Then:
+
+```js
+import { createStore } from 'derpy';
+import { debug } from 'derpy/debug/redux-devtools';
+import { CounterModel } from './counter-model';
+
+const store = process.env.NODE_ENV === 'production' ? createStore(CounterModel) : debug(createStore(CounterModel));
+```
+
 ### Rendering
 For examples with different view layers, see [the CodePen collection](https://codepen.io/collection/DNdBBG).
 
 Here's a counter example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
+import { createStore } from 'derpy';
 import { app } from 'derpy/app/picodom';
 import { h, patch } from 'picodom';
 import { CounterModel } from './counter-model';
 
-const store = app({
-  patch,
-  model: CounterModel,
-  view: ({ model }) =>
-    <div>
-      Your count is: {model.count}
-      <button onclick={model.down}>-</button>
-      <button onclick={model.up}>+</button>
-    </div>
-});
+const store = createStore(CounterModel);
+const Counter = ({ model }) =>
+  <div>
+    Your count is: {model.count}
+    <button onclick={model.down}>-</button>
+    <button onclick={model.up}>+</button>
+  </div>
+;
+
+app({ store, view: Counter, patch });
 ```
 
 All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
@@ -354,7 +374,10 @@ It also adds a `store.destroy()` method to unsubscribe from rendering, effective
 
 ## FAQs
 ### Wait, I want to run this library on a potato, how big is it?
-The [minified code](https://unpkg.com/derpy) is 1237 bytes, or 781 bytes gzipped.
+The [minified code](https://unpkg.com/derpy) is 1234 bytes, or 780 bytes gzipped.
+
+### `this` is bad and you should feel bad 🦀
+Hey, that's not a question! Anyway, if you don't like `this` and want to use `state` or something else, you can use the `callFunction` option when creating a store, [as described in this section](#custom-function-calls).
 
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
