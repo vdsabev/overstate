@@ -4,7 +4,8 @@
 [![version][version-badge]][package]
 [![MIT License][license-badge]][license]
 
-[![size][size-badge]][unpkg-dist] [![gzip size][gzip-badge]][unpkg-dist]
+[![size][size-badge]][unpkg-dist]
+[![gzip size][gzip-badge]][unpkg-dist]
 
 <h1 align="center">
   derpy 🎈
