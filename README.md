@@ -1,11 +1,24 @@
-[![npm version](https://badge.fury.io/js/derpy.svg)](https://www.npmjs.com/package/derpy)
-[![Downloads](https://img.shields.io/npm/dm/derpy.svg)](https://www.npmjs.com/package/derpy)
-[![Build Status](https://travis-ci.org/vdsabev/derpy.svg)](https://travis-ci.org/vdsabev/derpy)
-[![codecov](https://codecov.io/gh/vdsabev/derpy/branch/master/graph/badge.svg)](https://codecov.io/gh/vdsabev/derpy)
-[![License](https://img.shields.io/npm/l/derpy.svg)](https://www.npmjs.com/package/derpy)
+[![Build Status][build-badge]][build]
+[![Code Coverage][coverage-badge]][coverage]
+[![downloads][downloads-badge]][npmcharts]
+[![version][version-badge]][package]
+[![MIT License][license-badge]][license]
 
-# Derpy
-A silly little state manager 😋
+[![size][size-badge]][unpkg-dist]
+[![gzip size][gzip-badge]][unpkg-dist]
+
+<h1 align="center">
+  derpy 🎈
+</h1>
+<p align="center">Infinitely composable state + actions</p>
+
+## Why?
+Write data models that would have worked 5 years ago and will still work in 5 years time.
+
+## What?
+A data store that combines state + actions into a single model object, composed of other model objects.
+
+By returning the state changes (or a promise with the changes) in your model functions, you can assemble powerful applications with no boilerplate, asynchronous programming, lazy loading, and type safety, all the while only importing the library in a single file.
 
 ## Table of Contents
 - [Hello World](#hello-world)
@@ -350,7 +363,6 @@ import { app } from 'derpy/app/picodom';
 import { h, patch } from 'picodom';
 import { CounterModel } from './counter-model';
 
-const store = createStore(CounterModel);
 const Counter = ({ model }) =>
   <div>
     Your count is: {model.count}
@@ -359,7 +371,11 @@ const Counter = ({ model }) =>
   </div>
 ;
 
-app({ store, view: Counter, patch });
+app({
+  store: createStore(CounterModel),
+  view: Counter,
+  patch
+});
 ```
 
 All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
@@ -368,19 +384,30 @@ The `app` function is a very thin layer on top of Derpy to reduce boilerplate.
 
 You can pass a custom DOM element to render into as the second argument, which is `document.body` by default.
 
-It also adds a `store.destroy()` method to unsubscribe from rendering, effectively "destroying" your app, although the store will still work just fine.
+It also returns an `unsubscribe` function to stop rendering, effectively "destroying" your app, although the store will still work just fine.
 
 `app` uses `requestAnimationFrame` by default to throttle rendering. Alternatively, provide your own function in `app({ throttle: ... })`.
 
 ## FAQs
-### Wait, I want to run this library on a potato, how big is it?
-The [minified code](https://unpkg.com/derpy) is 1234 bytes, or 780 bytes gzipped.
-
 ### `this` is bad and you should feel bad 🦀
-Hey, that's not a question! Anyway, if you don't like `this` and want to use `state` or something else, you can use the `callFunction` option when creating a store, [as described in this section](#custom-function-calls).
+Hey, that's not a question! Anyway, if you prefer `state` or something else instead of `this`, you can use the `callFunction` option when creating a store, as described in the [custom function calls](#custom-function-calls) section.
 
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
 - Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/derpy/issues)
 - Browse the [CodePen collection](https://codepen.io/collection/DNdBBG)
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
+
+[build-badge]: https://img.shields.io/travis/vdsabev/derpy.svg?style=flat-square
+[build]: https://travis-ci.org/vdsabev/derpy
+[coverage-badge]: https://img.shields.io/codecov/c/github/vdsabev/derpy.svg?style=flat-square
+[coverage]: https://codecov.io/github/vdsabev/derpy
+[version-badge]: https://img.shields.io/npm/v/derpy.svg?style=flat-square
+[package]: https://www.npmjs.com/package/derpy
+[downloads-badge]: https://img.shields.io/npm/dm/derpy.svg?style=flat-square
+[npmcharts]: http://npmcharts.com/compare/derpy
+[license-badge]: https://img.shields.io/npm/l/derpy.svg?style=flat-square
+[license]: https://github.com/vdsabev/derpy/blob/master/LICENSE.md
+[gzip-badge]: http://img.badgesize.io/https://unpkg.com/derpy/index.min.js?compression=gzip&label=gzip%20size&style=flat-square
+[size-badge]: http://img.badgesize.io/https://unpkg.com/derpy/index.min.js?label=size&style=flat-square
+[unpkg-dist]: https://unpkg.com/derpy
