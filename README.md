@@ -389,7 +389,7 @@ It also returns an `unsubscribe` function to stop rendering, effectively "destro
 
 ## FAQs
 ### `this` is bad and you should feel bad 🦀
-Hey, that's not a question! Anyway, if you don't like `this` and want to use `state` or something else, you can use the `callFunction` option when creating a store, [as described in this section](#custom-function-calls).
+Hey, that's not a question! Anyway, if you prefer `state` or something else instead of `this`, you can use the `callFunction` option when creating a store, as described in the [custom function calls](#custom-function-calls) section.
 
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
