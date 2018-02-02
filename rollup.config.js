@@ -6,9 +6,7 @@ export default {
     file: 'index.min.js',
     sourcemap: true,
     format: 'iife',
-    name: 'Derpy'
+    name: 'Overstate',
   },
-  plugins: [
-    uglify()
-  ]
-}
+  plugins: [uglify()],
+};
