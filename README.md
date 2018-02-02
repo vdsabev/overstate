@@ -8,7 +8,7 @@
 [![gzip size][gzip-badge]][unpkg-dist]
 
 <h1 align="center">
-  derpy 🎈
+  Overstate 🎈
 </h1>
 <p align="center">Infinitely composable state + actions</p>
 
@@ -38,7 +38,7 @@ By returning the state changes (or a promise with the changes) in your model fun
 
 ## Hello World
 ```js
-import { createStore } from 'derpy';
+import { createStore } from 'overstate';
 
 const store = createStore({
   name: 'World',
@@ -57,7 +57,7 @@ Calling `store.model.setNameTo('😋')` anytime renders `"Hello 😋"` and so on
 
 ## Counter
 ```js
-import { createStore } from 'derpy';
+import { createStore } from 'overstate';
 
 const store = createStore({
   count: 0,
@@ -300,7 +300,7 @@ The child models will be inserted into the model's data when the import is done.
 </details>
 
 ### TypeScript
-Derpy is written in TypeScript, so if you use it you get autocomplete and type checking out of the box.
+Overstate is written in TypeScript, so if you use it you get autocomplete and type checking out of the box.
 
 Going back to the [Counter](#counter) example:
 ```ts
@@ -345,8 +345,8 @@ Be careful with those if you're using `this` inside your model functions - as ex
 First, make sure you have the [Redux devtools extension](http://extension.remotedev.io) for your browser. Then:
 
 ```js
-import { createStore } from 'derpy';
-import { debug } from 'derpy/debug/redux-devtools';
+import { createStore } from 'overstate';
+import { debug } from 'overstate/debug/redux-devtools';
 import { CounterModel } from './counter-model';
 
 const store = process.env.NODE_ENV === 'production' ? createStore(CounterModel) : debug(createStore(CounterModel));
@@ -358,8 +358,8 @@ For examples with different view layers, see [the CodePen collection](https://co
 Here's a counter example with [picodom](https://github.com/picodom/picodom):
 ```js
 /** @jsx h */
-import { createStore } from 'derpy';
-import { app } from 'derpy/app/picodom';
+import { createStore } from 'overstate';
+import { app } from 'overstate/app/picodom';
 import { h, patch } from 'picodom';
 import { CounterModel } from './counter-model';
 
@@ -380,7 +380,7 @@ app({
 
 All functions in the model are bound to the correct context, so you can write `onclick={model.up}` instead of `onclick={() => model.up()}`.
 
-The `app` function is a very thin layer on top of Derpy to reduce boilerplate.
+The `app` function is a very thin layer on top of Overstate to reduce boilerplate.
 
 You can pass a custom DOM element to render into as the second argument, which is `document.body` by default.
 
@@ -394,20 +394,20 @@ Hey, that's not a question! Anyway, if you prefer `state` or something else inst
 
 ### So this is cool, where can I find out more?
 I'm glad you asked! Here are some useful resources:
-- Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/derpy/issues)
+- Feel free to ask questions and file issues [right here in GitHub](https://github.com/vdsabev/overstate/issues)
 - Browse the [CodePen collection](https://codepen.io/collection/DNdBBG)
 - [Follow me on Twitter](https://twitter.com/vdsabev) for updates and random thoughts
 
-[build-badge]: https://img.shields.io/travis/vdsabev/derpy.svg?style=flat-square
-[build]: https://travis-ci.org/vdsabev/derpy
-[coverage-badge]: https://img.shields.io/codecov/c/github/vdsabev/derpy.svg?style=flat-square
-[coverage]: https://codecov.io/github/vdsabev/derpy
-[version-badge]: https://img.shields.io/npm/v/derpy.svg?style=flat-square
-[package]: https://www.npmjs.com/package/derpy
-[downloads-badge]: https://img.shields.io/npm/dm/derpy.svg?style=flat-square
-[npmcharts]: http://npmcharts.com/compare/derpy
-[license-badge]: https://img.shields.io/npm/l/derpy.svg?style=flat-square
-[license]: https://github.com/vdsabev/derpy/blob/master/LICENSE.md
-[gzip-badge]: http://img.badgesize.io/https://unpkg.com/derpy/index.min.js?compression=gzip&label=gzip%20size&style=flat-square
-[size-badge]: http://img.badgesize.io/https://unpkg.com/derpy/index.min.js?label=size&style=flat-square
-[unpkg-dist]: https://unpkg.com/derpy
+[build-badge]: https://img.shields.io/travis/vdsabev/overstate.svg?style=flat-square
+[build]: https://travis-ci.org/vdsabev/overstate
+[coverage-badge]: https://img.shields.io/codecov/c/github/vdsabev/overstate.svg?style=flat-square
+[coverage]: https://codecov.io/github/vdsabev/overstate
+[version-badge]: https://img.shields.io/npm/v/overstate.svg?style=flat-square
+[package]: https://www.npmjs.com/package/overstate
+[downloads-badge]: https://img.shields.io/npm/dm/overstate.svg?style=flat-square
+[npmcharts]: http://npmcharts.com/compare/overstate
+[license-badge]: https://img.shields.io/npm/l/overstate.svg?style=flat-square
+[license]: https://github.com/vdsabev/overstate/blob/master/LICENSE.md
+[gzip-badge]: http://img.badgesize.io/https://unpkg.com/overstate/index.min.js?compression=gzip&label=gzip%20size&style=flat-square
+[size-badge]: http://img.badgesize.io/https://unpkg.com/overstate/index.min.js?label=size&style=flat-square
+[unpkg-dist]: https://unpkg.com/overstate

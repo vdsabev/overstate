@@ -6,4 +6,4 @@ node_modules
 *.js.map
 !*.config.js
 *.d.ts
-!derpy.d.ts
+!overstate.d.ts

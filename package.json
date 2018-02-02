@@ -1,15 +1,15 @@
 {
-  "version": "0.7.1",
-  "name": "derpy",
-  "description": "A silly little state manager 😋",
+  "version": "1.0.0",
+  "name": "overstate",
+  "description": "Infinitely composable state + actions 🎈",
   "keywords": [
-    "derpy",
-    "model",
+    "overstate",
     "state",
     "state management",
-    "data flow"
+    "data flow",
+    "model"
   ],
-  "repository": "vdsabev/derpy",
+  "repository": "vdsabev/overstate",
   "author": {
     "name": "Vladimir Sabev",
     "url": "https://vdsabev.com"
