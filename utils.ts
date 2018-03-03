@@ -12,7 +12,7 @@ export interface Merge {
   <U extends Record<string, any>>(
     target: RecursivePartial<U>,
     source: RecursivePartial<U>,
-    createProxyFunction?: Function
+    createProxyFunction?: Function,
   ): RecursivePartial<U>;
 }
 

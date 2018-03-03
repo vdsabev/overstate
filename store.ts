@@ -13,7 +13,7 @@ export interface StoreOptions {
   callFunction: <S extends {}>(
     fn: Function,
     state: S,
-    args: any[]
+    args: any[],
   ) => RecursivePartial<S> | Promise<RecursivePartial<S>>;
 }
 
