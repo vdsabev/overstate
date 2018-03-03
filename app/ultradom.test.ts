@@ -1,10 +1,10 @@
 import { createStore, Store } from '../store';
-import { app } from './picodom';
+import { app } from './ultradom';
 
-describe(`picodom`, () => {
+describe(`ultradom`, () => {
   const defaultOptions = {
     view: ({ model }) => ({} as Element),
-    patch: () => ({} as Element),
+    patch: () => document.createElement('div'),
   };
 
   let store: Store<{}>;
@@ -15,6 +15,7 @@ describe(`picodom`, () => {
   it(`should call 'throttle' on every update when throttle is passed`, () => {
     const throttle = jest.fn();
     app({ ...defaultOptions, store, throttle });
+    store.update();
     expect(throttle).toHaveBeenCalledTimes(1);
     store.update();
     expect(throttle).toHaveBeenCalledTimes(2);
@@ -24,14 +25,24 @@ describe(`picodom`, () => {
     const originalRAF = (global as any).requestAnimationFrame;
     const raf = ((global as any).requestAnimationFrame = jest.fn());
     app({ ...defaultOptions, store });
+    store.update();
     expect(raf).toHaveBeenCalledTimes(1);
     store.update();
     expect(raf).toHaveBeenCalledTimes(2);
     (global as any).requestAnimationFrame = originalRAF;
   });
 
+  it(`should patch existing container if passed`, () => {
+    const container = document.createElement('div');
+    const patch = jest.fn(() => container);
+    const throttle = jest.fn((callback) => callback());
+    app({ ...defaultOptions, patch, store, throttle }, container);
+    store.update();
+    expect(patch).toHaveBeenLastCalledWith(store.model, container);
+  });
+
   it(`should call 'patch' on every update`, () => {
-    const patch = jest.fn();
+    const patch = jest.fn(() => document.createElement('div'));
     app({ ...defaultOptions, store, patch, throttle: (fn) => fn() });
     expect(patch).toHaveBeenCalledTimes(1);
     store.update();

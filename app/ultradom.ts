@@ -7,7 +7,7 @@ export interface App {
 export interface AppOptions<T extends {}> {
   store?: Store<T>;
   view(props: { model: T }): any;
-  patch(oldNode: any, newNode: any, ...args: any[]): any;
+  patch(newNode: any, container?: Node): any;
   throttle?(fn: Function): any;
 }
 
@@ -18,15 +18,15 @@ export interface AppOptions<T extends {}> {
  * 3. A `patch` function that updates the container's DOM using the rendered view
  * Returns an unsubscribe function which stops rendering after being called.
  */
-export const app: App = ({ store, view, patch, throttle = requestAnimationFrame }, container) => {
+export const app: App = (
+  { store, view, patch, throttle = requestAnimationFrame },
+  container = document.body.appendChild(patch(view({ model: store.model }))),
+) => {
   const render = (model: any) => {
     throttle(() => {
-      patch(container, (container = view({ model })));
+      patch(view({ model }), container);
     });
   };
 
-  const unsubscribe = store.subscribe(render);
-  store.update();
-
-  return unsubscribe;
+  return store.subscribe(render);
 };
