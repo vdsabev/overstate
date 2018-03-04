@@ -2,7 +2,7 @@ import { AppOptions } from '../overstate';
 import { Store } from '../store';
 
 export interface PreactOptions<T extends {}> extends AppOptions<T> {
-  render(newNode: Node, container?: Node, node?: Node): any;
+  render(vdom: any, container?: Node, existingNode?: Node): Node;
 }
 
 /**
@@ -16,11 +16,9 @@ export const app = <T extends {}>(
   { store, view, render, throttle = requestAnimationFrame }: PreactOptions<T>,
   container: Node = document.body,
 ) => {
-  let node: Node;
+  let existingNode: Node;
   const renderDOM = (model: T) => {
-    const newNode = view({ model });
-    render(newNode, container, node);
-    node = newNode;
+    existingNode = render(view({ model }), container, existingNode);
   };
   renderDOM(store.model);
 

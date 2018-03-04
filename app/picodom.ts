@@ -2,7 +2,7 @@ import { AppOptions } from '../overstate';
 import { Store } from '../store';
 
 export interface PicodomOptions<T extends {}> extends AppOptions<T> {
-  render(container: Node, node: Node, newNode: Node): any;
+  render(container: Node, existingNode: Node, vdom: any): Node;
 }
 
 /**
@@ -16,11 +16,9 @@ export const app = <T extends {}>(
   { store, view, render, throttle = requestAnimationFrame }: PicodomOptions<T>,
   container: Node = document.body,
 ) => {
-  let node: Node;
+  let existingNode: Node;
   const renderDOM = (model: T) => {
-    const newNode = view({ model });
-    render(container, node, newNode);
-    node = newNode;
+    existingNode = render(container, existingNode, view({ model }));
   };
   renderDOM(store.model);
 
