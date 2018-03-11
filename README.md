@@ -13,12 +13,12 @@
 <p align="center">Infinitely composable state + actions</p>
 
 ## Why?
-Write data models that would have worked 5 years ago and will still work in 5 years time.
+You want to write data models that would have worked 5 years ago and will still work in 5 years time.
 
 ## What?
 A data store that combines state + actions into a single model object, composed of other model objects.
 
-By returning the state changes (or a promise with the changes) in your model functions, you can assemble powerful applications with no boilerplate, asynchronous programming, lazy loading, and type safety, all the while only importing the library in a single file.
+By returning the state changes (or a promise with the changes) in your model functions, you can assemble powerful applications with no boilerplate, asynchronous programming, lazy loading, and type safety, all the while only depending on this library in a single file.
 
 ## Table of Contents
 - [Hello World](#hello-world)
@@ -360,7 +360,7 @@ Here's a counter example with [picodom](https://github.com/picodom/picodom):
 /** @jsx h */
 import { createStore } from 'overstate';
 import { app } from 'overstate/app/picodom';
-import { h, patch } from 'picodom';
+import { h, patch as render } from 'picodom';
 import { CounterModel } from './counter-model';
 
 const Counter = ({ model }) =>
@@ -374,7 +374,7 @@ const Counter = ({ model }) =>
 app({
   store: createStore(CounterModel),
   view: Counter,
-  patch
+  render
 });
 ```
 

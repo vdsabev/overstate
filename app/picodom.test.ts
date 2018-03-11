@@ -12,6 +12,6 @@ describe(`picodom`, () => {
     const throttle = jest.fn((callback) => callback());
     app({ ...defaultOptions, render, store, throttle }, container);
     store.update();
-    expect(render).toHaveBeenLastCalledWith(container, child, {});
+    expect(render).toHaveBeenLastCalledWith(container, {}, {});
   });
 });
