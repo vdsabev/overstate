@@ -1,5 +1,4 @@
 import { AppOptions } from '../overstate';
-import { Store } from '../store';
 
 export interface PreactOptions<T extends {}> extends AppOptions<T> {
   render(vdom: any, container?: Node, existingNode?: Node): Node;
