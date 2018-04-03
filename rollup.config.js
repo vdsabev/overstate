@@ -1,12 +1,17 @@
 import uglify from 'rollup-plugin-uglify';
 
-export default {
-  input: 'index.js',
+const getBuildOptions = (name) => ({
+  input: `${name}.js`,
   output: {
-    file: 'index.min.js',
+    file: `${name}.min.js`,
     sourcemap: true,
     format: 'iife',
     name: 'Overstate',
   },
   plugins: [uglify()],
-};
+});
+
+export default [
+  getBuildOptions('index'),
+  getBuildOptions('fp'),
+];
