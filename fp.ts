@@ -42,6 +42,7 @@ export const createStore = <State extends {}>(initialState: State) => {
       dispatch(fnOrObj(state));
     }
     // Dispatch resolved value recursively
+    // TODO: How do we handle the fact that the state might've changed in the meantime?
     else if (isPromise<StoreValue<State>>(fnOrObj)) {
       fnOrObj.then(dispatch);
     }
