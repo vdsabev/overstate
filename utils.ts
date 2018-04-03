@@ -2,10 +2,10 @@ export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
 
 export const isFunction = (value: any): value is Function => typeof value === 'function';
 
-export const isObject = (value: any): value is Object =>
+export const isObject = <T = Object>(value: any): value is T =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 
-export const isPromise = <T>(promise: T | Promise<T>): promise is Promise<T> =>
+export const isPromise = <T>(promise: Promise<T> | T | null | undefined | void): promise is Promise<T> =>
   promise != null && isFunction((promise as Promise<T>).then);
 
 export interface Merge {
