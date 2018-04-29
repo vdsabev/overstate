@@ -1,7 +1,7 @@
 import { AppOptions } from '../overstate';
 
-export interface PicodomOptions<T extends {}> extends AppOptions<T> {
-  render(container: Node, existingNode: VNode<{}> | null, newNode: VNode<{}>): Element;
+export interface Render {
+  (container: Element, existingNode: VNode<{}> | null, node: VNode<{}>): Element;
 }
 
 export interface VNode<Props> {
@@ -18,8 +18,8 @@ export interface VNode<Props> {
  * Returns an unsubscribe function which will stop rerendering after being called.
  */
 export const app = <T extends {}>(
-  { store, view, render, throttle = requestAnimationFrame }: PicodomOptions<T>,
-  container: Node = document.body,
+  { store, view, render, throttle = requestAnimationFrame }: AppOptions<T, Render>,
+  container = document.body,
 ) => {
   let existingNode: VNode<{}>;
   const renderDOM = (model: T) => {

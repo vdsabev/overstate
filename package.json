@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "name": "overstate",
   "description": "Infinitely composable state + actions 🎈",
   "keywords": [
@@ -51,7 +51,7 @@
       "ts",
       "js"
     ],
-    "testRegex": "(/__tests__/.*|\\.test)\\.(ts|js)$",
+    "testRegex": "\\.test\\.(ts|js)$",
     "transform": {
       ".ts": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     }
