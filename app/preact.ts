@@ -1,7 +1,7 @@
 import { AppOptions } from '../overstate';
 
-export interface PreactOptions<T extends {}> extends AppOptions<T> {
-  render(vdom: any, container?: Node, existingNode?: Node): Node;
+export interface Render {
+  (node: any, container: Element | Document | null, existingNode?: Element): Element;
 }
 
 /**
@@ -12,10 +12,10 @@ export interface PreactOptions<T extends {}> extends AppOptions<T> {
  * Returns an unsubscribe function which will stop rerendering after being called.
  */
 export const app = <T extends {}>(
-  { store, view, render, throttle = requestAnimationFrame }: PreactOptions<T>,
-  container: Node = document.body,
+  { store, view, render, throttle = requestAnimationFrame }: AppOptions<T, Render>,
+  container: Element = document.body,
 ) => {
-  let existingNode: Node;
+  let existingNode: Element;
   const renderDOM = (model: T) => {
     existingNode = render(view({ model }), container, existingNode);
   };

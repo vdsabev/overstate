@@ -3,8 +3,9 @@ declare module 'rollup-plugin-*';
 
 import { Store } from './store';
 
-export interface AppOptions<T extends {}> {
+export interface AppOptions<T extends {}, R extends Function> {
   store: Store<T>;
   view(props: { model: T }): any;
+  render: R;
   throttle?(fn: Function): any;
 }
