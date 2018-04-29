@@ -4,8 +4,8 @@ import * as preact from './preact';
 import * as ultradom from './ultradom';
 
 export const defaultOptions = {
-  view: ({ model }) => ({} as Element),
-  render: () => (document.createElement('div') as Element),
+  view: ({ model }) => ({}),
+  render: () => document.createElement('div'),
 };
 
 const apps = { picodom, preact, ultradom };

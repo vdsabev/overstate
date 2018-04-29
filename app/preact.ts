@@ -17,7 +17,7 @@ export const app = <T extends {}>(
 ) => {
   let existingNode: Element;
   const renderDOM = (model: T) => {
-    existingNode = render(view({ model }), container, existingNode) as Element;
+    existingNode = render(view({ model }), container, existingNode);
   };
   renderDOM(store.model);
 
