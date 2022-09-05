@@ -18,7 +18,7 @@ You want to write data models that would have worked 5 years ago and will still 
 ## What?
 A data store that combines state + actions into a single model object, composed of other model objects.
 
-By returning the state changes (or a promise with the changes) in your model functions, you can assemble powerful applications with no boilerplate, asynchronous programming, lazy loading, and type safety, all the while only depending on this library in a single file.
+By returning the state changes (or a promise with the changes) in your model functions, you can assemble powerful applications with asynchronous programming, lazy loading, type safety, and no boilerplate, all the while only using this library in a single file.
 
 ## Table of Contents
 - [Hello World](#hello-world)
@@ -307,22 +307,8 @@ Going back to the [Counter](#counter) example:
 store.model.up(5); // [ts] Expected 0 arguments, but got 1.
 ```
 
-However, `this` doesn't get type definitions inside objects:
-```ts
-export const CounterModel = {
-  count: 0,
-  add(value: number) {
-    return { count: this.count + value }; // Hmm, `this` is of type `any` here 😕
-  }
-};
-```
-
-And we can't do `add(this: typeof CounterModel, value: number)` either, because we're referencing an object inside its own definition.
-
-So...read on.
-
 ### Classes
-To get type safety inside your models, or if you just prefer to, you can use classes instead of objects:
+If you prefer, you can use classes instead of objects:
 ```ts
 export class CounterModel {
   count = 0;
